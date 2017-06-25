@@ -47,6 +47,9 @@ store.subscribe(() => {
 import react from 'react';
 import TodoList from './TodoList';
 
+// The store is the default/root space
+// It can creates/get child spaces with store.spaces(<nameOfSpace>)
+// Each space has a state object accessed by store.state
 export default function Container({ store }) {
   return (
     <div>
@@ -62,7 +65,9 @@ import react from 'react';
 import Todo from 'Todo';
 
 // actions and spaces auto-created for each space
-export default function TodoList({ todos, actions, spaces, name }) {
+export default function TodoList({ state, actions, spaces, name }) {
+  const { todos } = state;
+  
   return(
     <h2>{name}'s Todos:</h2>
     <button onClick={actions.do(addTodo)}>Add Todo</button>
@@ -74,13 +79,15 @@ export default function TodoList({ todos, actions, spaces, name }) {
   );
 };
 
+// Actions are given the event first, then the state
+// The object that is returned replaces that space's state
 function addTodo(e, { todos }) {
   const lastIndex = todos.length - 1;
   const nextId = todos[lastIndex].id + 1;
   
   e.preventDefault();
   
-  return { // Overwrites the todos value on this space
+  return {
     todos: [
       { id: nextId, msg: '', done: false }
      ].concat(todos)
@@ -94,7 +101,8 @@ import react from 'react';
 
 // actions and spaces auto-created for each space
 // This component ignores spaces though, since it isn't needed
-export default function Todo({ todo, actions }) {
+export default function Todo({ state, actions }) {
+  const todo: { state };
   const doneClassName = todo.done ? 'done' : '';
   
   return(
