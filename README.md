@@ -40,6 +40,8 @@ store.subscribe(() => {
     document.getElementById('react-container')
   );
 });
+
+store.initState({ todos: [], name: 'Jon' });
 ```
 
 **Container.js**
