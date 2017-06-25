@@ -27,7 +27,7 @@ That all sounds nice but it has its problems:
 SuperStore can be used with any front-end view library, but the examples below are done with React.
 
 **index.js**
-```javascript
+```jsx
 import react from 'react';
 import ReactDOM from 'react-dom';
 import SuperStore from 'super-store';
@@ -43,7 +43,7 @@ store.subscribe(() => {
 ```
 
 **Container.js**
-```javascript
+```jsx
 import react from 'react';
 import TodoList from './TodoList';
 
@@ -57,7 +57,7 @@ export default function Container({ store }) {
 ```
 
 **TodoList.js**
-```javascript
+```jsx
 import react from 'react';
 import Todo from 'Todo';
 
@@ -89,7 +89,7 @@ function addTodo(e, { todos }) {
 ```
 
 **Todo.js**
-```javascript
+```jsx
 import react from 'react';
 
 // actions and spaces auto-created for each space
