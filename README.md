@@ -73,7 +73,7 @@ export default function TodoList({ state, actions, spaces, name }) {
     <button onClick={actions.do(addTodo)}>Add Todo</button>
     <ul className='todos'>
       {todos.map(todo =>
-        <Todo {...spaces(todo.id)} />
+        <Todo {...spaces(todo.id)} onRemove={actions.do(removeTodo, todo)} />
       )}
     </ul>
   );
@@ -93,6 +93,15 @@ function addTodo(e, { todos }) {
      ].concat(todos)
    };
  }
+ 
+ // This action is passed an extra parameter (todo), which appears between the event and store state
+function removeTodo(e, todo, { todos }) {
+  const newTodos = todos.filter(t => t.id !== todo.id);
+  
+  return { 
+    todos: newTodos
+  };
+}
 ```
 
 **Todo.js**
@@ -101,7 +110,7 @@ import react from 'react';
 
 // actions and spaces auto-created for each space
 // This component ignores spaces though, since it isn't needed
-export default function Todo({ state, actions }) {
+export default function Todo({ state, actions, onRemove }) {
   const todo: { state };
   const doneClassName = todo.done ? 'done' : '';
   
@@ -109,7 +118,7 @@ export default function Todo({ state, actions }) {
     <li className='todo'>
       <input type='checkbox' checked={done} onChange={actions.do(toggleDone)} />
       <span className={doneClassName}>{todo.msg}</span>
-      <button onClick={actions.parentDo(removeTodo, todo)}>Remove Todo</button>
+      <button onClick={onRemove}>Remove Todo</button>
     </li>
   );
 };
@@ -117,15 +126,6 @@ export default function Todo({ state, actions }) {
 function toggleDone(e, { todo }) {
   return {
     todo: Object.assign({}, todo, { done: !todo.done }) // Copy of old todo, with one field changed
-  };
-}
-
-// Runs with the the event, whatever is passed in, and then the parent space
-function removeTodo(e, todo, { todos }) {
-  const newTodos = todos.filter(t => t.id !== todo.id);
-  
-  return { 
-    todos: newTodos
   };
 }
 ```
