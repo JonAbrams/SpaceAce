@@ -18,17 +18,17 @@ This concept, referred to as _Flux_ has many advantages:
 
 - It's much easier to reason through the changes your application experiences.
 - You can easily log changes.
-- You can even replay/undo state changes.
+- You can even replay/undo state changes (useful when debugging).
 - Has great libraries such as _Redux_ to help you get started.
 
 That all sounds nice but it has its problems:
 - It's not clear which parts of the store are relevant to each view component.
-- It's hard to architect the application code around this concept. People will put all their actions in a single `actions.js`, and end up with a giant reducer in `reducer.js`. This goes against the goal of keeping all the code relevant to a component in a single file.
-- This pattern results in a lot of boilerplate code. Actions are defined in one file, referenced multiple times in the same file, and then referenced in the app reducer. It'd be nice to define an action one, and then just call it.
+- It's hard to architect the application code around this concept. People often put all their actions in a single `actions.js`, and end up with a giant reducer in `reducer.js`. This goes against the goal of keeping all the code relevant to a component in a single file.
+- This pattern results in a lot of boilerplate code. Actions are defined in one file, referenced multiple times in the same file, and then referenced in the app reducer. It'd be nice to define an action once, in the component that uses it, and then just call it.
 
 ## Usage
 
-SpaceStore can be used with any front-end view library, but the examples below are done with React.
+SpaceAce can be used with any front-end view library, but the examples below are done with React.
 
 **index.js**
 ```jsx
@@ -38,7 +38,7 @@ import Space from 'spaceace';
 import Container from './Container';
 
 // Create the root "space" along with its initial state
-const rootSpace = new Space('root', { name: 'Jon', todoList: { todos: [] } });
+const rootSpace = new Space({ name: 'Jon', todoList: { todos: [] } });
 rootSpace.actions.subscribe((space, causedBy) => {
   // Example `causedBy`s:
   // ['initialized'], ['todoList#addTodo'], ['todoList.todos[akd4a1plj]#toggleDone']
@@ -58,12 +58,16 @@ import TodoList from './TodoList';
 
 export default function Container({ state, actions }) {
   // Create/Get child space that uses/takes over `state.todoList`
-  const todoListSpace = actions.fetchSpace('todoList');
+  const todoListSpace = actions.space('todoList');
 
   return (
     <div>
       <h1>Welcome {state.name}</h1>
-      <TodoList {...todoListSpace} name={state.name} />
+      <TodoList
+        // the ellipsis syntax auto sets the `state` and `actions` props
+        {...todoListSpace}
+        name={state.name}
+      />
     </div>
    );
 ```
@@ -71,6 +75,7 @@ export default function Container({ state, actions }) {
 **TodoList.js**
 ```jsx
 import react from 'react';
+import uuid from 'uuid/v4';
 import Todo from 'Todo';
 
 // state and actions auto-created for each space
@@ -84,7 +89,6 @@ export default function TodoList({ state, actions, name }) {
       {todos.map(todoSpace =>
         <Todo
           {...todoSpace}
-          onRemove={actions.do(removeTodo, todoSpace)}
           key={todoSpace.state.id}
         />
       )}
@@ -93,11 +97,10 @@ export default function TodoList({ state, actions, name }) {
 };
 
 // Actions are given the event first, then the space
-// The object that is returned replaces that space's state
+// The object that is returned is merged with the space's state
+// In this case the `todos` attribute is overwritten
 function addTodo(e, { state, actions }) {
   const { todos } = state;
-  const lastIndex = todos.length - 1;
-  const nextId = todos[lastIndex].id + 1;
 
   e.preventDefault();
 
@@ -105,18 +108,11 @@ function addTodo(e, { state, actions }) {
     todos: [
       // actions.space(…) creates a space for the todo, with an initial state
       // An update to this new space will propagate up to TodoList's space
-      actions.space({ id: nextId, msg: '', done: false })
+      // All spaces that exist in a list, like this one, need a unique 'id' or 'key' attribute
+      actions.space({ id: uuid(), msg: '', done: false })
      ].concat(todos)
    };
  }
-
- // Note the `todoSpace` parameter passed in by `actions.do` in the render above
-function removeTodo(e, todoSpace, { state }) {
-  const newTodos = state.todos.filter(t => t.id !== todoSpace.state.id);
-
-  return {
-    todos: newTodos
-  };
 }
 ```
 
@@ -131,16 +127,24 @@ export default function Todo({ state: todo, actions, onRemove }) {
     <li className='todo'>
       <input type='checkbox' checked={done} onChange={actions.do(toggleDone)} />
       <span className={doneClassName}>{todo.msg}</span>
-      <button onClick={onRemove}>Remove Todo</button>
+      <button onClick={actions.do(removeTodo)}>Remove Todo</button>
     </li>
   );
 };
 
-function toggleDone(e, { todo }) {
-  return {
-    // Copy of old todo, with one field changed
-    todo: Object.assign({}, todo, { done: !todo.done })
-  };
+// The returned value from an action is merged onto the existing state
+// In this case, only the `done` attribute is changed
+function toggleDone(e, { state }) {
+  return { done: !todo.done };
+}
+
+function removeTodo(e) {
+  e.preventDefault();
+
+  // Returning null from an action causes this space to be removed from its parent
+  // In this case, this causes this todo to be removed from the parent's list
+  // of todos
+  return null;
 }
 ```
 
@@ -159,10 +163,6 @@ You create a new space by calling `new Space(…)` e.g.
 "the space's name", { initialState: true, todoList: { todos: [] } }).
 ```
 
-The first parameter to `Space`'s constructor is a string used to identify the space.
-This name is used to bind child spaces to a particular node in the parent space's state.
-It is also useful for logging the activity that occurs within the entire data store.
-
-If you have a space (e.g. `rootSpace`), and want to create a child space, call its `space()`.
-e.g. `rootSpace.space('todoList')`. This new child space will take
-over the part of the parent space's state addressed by the name of the child space.
+If you have a space, and want to create a child space, call `actions.space({ ... initialState })` or
+`actions.space('keyName')`. If a string is provided, the space will attach to the specified key of
+the current space.
