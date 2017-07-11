@@ -64,7 +64,8 @@ export default function Container({ state, actions }) {
     <div>
       <h1>Welcome {state.name}</h1>
       <TodoList
-        // the ellipsis syntax auto sets the `state` and `actions` props
+        // The ellipsis syntax auto sets the `state` and `actions` props
+        // since those are `todoListSpace`'s attributes
         {...todoListSpace}
         name={state.name}
       />
@@ -89,7 +90,8 @@ export default function TodoList({ state, actions, name }) {
       {todos.map(todoSpace =>
         <Todo
           {...todoSpace}
-          key={todoSpace.state.id}
+          // the above does the same as:
+          // state={todoSpace.state} actions={todoSpace.actions} key={todoSpace.state.id}
         />
       )}
     </ul>
@@ -160,7 +162,7 @@ Every `space` consists of:
 
 You create a new space by calling `new Space(…)` e.g.
 ```javascript
-"the space's name", { initialState: true, todoList: { todos: [] } }).
+const rootSpace = new Space({ initialState: true, todoList: { todos: [] } });
 ```
 
 If you have a space, and want to create a child space, call `actions.space({ ... initialState })` or
