@@ -1,0 +1,28 @@
+{
+  "name": "spaceace",
+  "version": "0.0.1",
+  "description": "A fancy immutable storage library for JavaScript",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JonAbrams/SpaceAce.git"
+  },
+  "keywords": [
+    "flux",
+    "react",
+    "redux",
+    "store"
+  ],
+  "author": "Jon Abrams <jon@jonabrams.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JonAbrams/SpaceAce/issues"
+  },
+  "homepage": "https://github.com/JonAbrams/SpaceAce#readme",
+  "dependencies": {
+    "mocha": "^3.4.2"
+  }
+}

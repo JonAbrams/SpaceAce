@@ -4,7 +4,7 @@ A fancy immutable storage library for JavaScript
 
 ## Status
 
-No code exists yet. So far it's just a readme consisting of rough ideas that may turn into a library. Any feedback or ideas are welcome!
+Some code exists, but is very much a WIP. Docs/API not yet finalized. Any feedback or ideas are welcome!
 
 ## Goal
 
