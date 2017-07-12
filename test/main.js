@@ -37,6 +37,4 @@ describe('Space', function() {
       assert.equal(this.space.state.child.value, 'is there');
     });
   });
-
-
 });
