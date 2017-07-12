@@ -56,17 +56,13 @@ rootSpace.actions.subscribe((space, causedBy) => {
 import react from 'react';
 import TodoList from './TodoList';
 
-export default function Container({ state, actions }) {
-  // Create/Get child space that uses/takes over `state.todoList`
-  const todoListSpace = actions.space('todoList');
-
+export default function Container({ state, doAction, subSpace }) {
   return (
     <div>
       <h1>Welcome {state.name}</h1>
       <TodoList
-        // The ellipsis syntax auto sets the `state` and `actions` props
-        // since those are `todoListSpace`'s attributes
-        {...todoListSpace}
+        // Create/Get child space that uses/takes over `state.todoList`
+        {...subSpace('todoList')}
         name={state.name}
       />
     </div>
@@ -79,19 +75,20 @@ import react from 'react';
 import uuid from 'uuid/v4';
 import Todo from 'Todo';
 
-// state and actions auto-created for each space
-export default function TodoList({ state, actions, name }) {
+export default function TodoList({ state, doAction, name }) {
   const { todos } = state;
 
   return(
     <h2>{name}'s Todos:</h2>
-    <button onClick={actions.do(addTodo)}>Add Todo</button>
+    <button onClick={doAction(addTodo)}>Add Todo</button>
     <ul className='todos'>
       {todos.map(todoSpace =>
         <Todo
           {...todoSpace}
           // the above does the same as:
-          // state={todoSpace.state} actions={todoSpace.actions} key={todoSpace.state.id}
+          // state={todoSpace.state}
+          // doAction={todoSpace.doAction}
+          key={todoSpace.state.id}
         />
       )}
     </ul>
@@ -101,17 +98,17 @@ export default function TodoList({ state, actions, name }) {
 // Actions are given the event first, then the space
 // The object that is returned is merged with the space's state
 // In this case the `todos` attribute is overwritten
-function addTodo(e, { state, actions }) {
+function addTodo(e, { state, subSpace }) {
   const { todos } = state;
 
   e.preventDefault();
 
   return {
     todos: [
-      // actions.space(…) creates a space for the todo, with an initial state
-      // An update to this new space will propagate up to TodoList's space
-      // All spaces that exist in a list, like this one, need a unique 'id' or 'key' attribute
-      actions.space({ id: uuid(), msg: '', done: false })
+      // space(…) creates a space for the todo, with an initial state
+      // All spaces that exist in a list, like this one, need a unique 'id' or
+      // 'key' attribute
+      subSpace({ id: uuid(), msg: '', done: false })
      ].concat(todos)
    };
  }
@@ -122,21 +119,21 @@ function addTodo(e, { state, actions }) {
 ```jsx
 import react from 'react';
 
-export default function Todo({ state: todo, actions, onRemove }) {
+export default function Todo({ state: todo, doAction }) {
   const doneClassName = todo.done ? 'done' : '';
 
   return(
     <li className='todo'>
-      <input type='checkbox' checked={done} onChange={actions.do(toggleDone)} />
+      <input type='checkbox' checked={done} onChange={doAction(toggleDone)} />
       <span className={doneClassName}>{todo.msg}</span>
-      <button onClick={actions.do(removeTodo)}>Remove Todo</button>
+      <button onClick={doAction(removeTodo)}>Remove Todo</button>
     </li>
   );
 };
 
 // The returned value from an action is merged onto the existing state
-// In this case, only the `done` attribute is changed
-function toggleDone(e, { state }) {
+// In this case, only the `done` attribute is changed on the todo
+function toggleDone(e, { state: todo }) {
   return { done: !todo.done };
 }
 
@@ -165,6 +162,6 @@ You create a new space by calling `new Space(…)` e.g.
 const rootSpace = new Space({ initialState: true, todoList: { todos: [] } });
 ```
 
-If you have a space, and want to create a child space, call `actions.space({ ... initialState })` or
-`actions.space('keyName')`. If a string is provided, the space will attach to the specified key of
+If you have a space, and want to create a child space, call `parentSpace.subSpace({ ... initialState })` or
+`parentSpace.subSpace('keyName')`. If a string is provided, the space will attach to the specified key of
 the current space.
