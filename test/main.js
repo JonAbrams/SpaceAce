@@ -32,9 +32,13 @@ describe('Space', function() {
       this.subSpaceByName = this.space.subSpace('child');
     });
 
-    it.only('propagates changes upwards', function() {
+    it('propagates changes upwards', function() {
       this.subSpaceByName.doAction(() => ({ value: 'is there' }));
       assert.equal(this.space.state.child.value, 'is there');
+    });
+
+    it('uses existing sub space', function() {
+      assert.equal(this.space.subSpace('child'), this.subSpaceByName);
     });
   });
 });
