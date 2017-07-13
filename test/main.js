@@ -30,6 +30,9 @@ describe('Space', function() {
   describe('adding child spaces', function() {
     beforeEach(function() {
       this.subSpaceByName = this.space.subSpace('child');
+      this.subSpaceByAction = this.space.doAction(({ subSpace }) => ({
+        actionChild: subSpace({ value: 'present' })
+      }));
     });
 
     it('propagates changes upwards', function() {
@@ -39,6 +42,33 @@ describe('Space', function() {
 
     it('uses existing sub space', function() {
       assert.equal(this.space.subSpace('child'), this.subSpaceByName);
+    });
+
+    it('supports adding subspaces by action', function() {
+      assert(this.space.children.actionChild);
+      assert.equal(this.space.state.actionChild.value, 'present');
+    });
+
+    it('supports subSpaces in lists', function() {
+      this.space.doAction(({ subSpace }) => ({
+        list: [subSpace({ value: 'present', id: 'abc12-3' })]
+      }));
+
+      assert.deepEqual(this.space.state, {
+        initialState: 'here',
+        count: 1,
+        child: {},
+        actionChild: { value: 'present' },
+        list: [{value: 'present', id: 'abc12-3' }]
+      });
+    });
+
+    it('throws list subSpaces missing id', function() {
+      assert.throws(() => {
+        this.space.doAction(({ subSpace }) => ({
+          list: [subSpace({ value: 'present' })]
+        }));
+      });
     });
   });
 });
