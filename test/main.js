@@ -64,11 +64,13 @@ describe('Space', function() {
     });
 
     describe('child spaces in lists', function() {
-      it('supports subSpaces in lists', function() {
+      beforeEach(function() {
         this.space.doAction(({ subSpace }) => ({
           list: [subSpace({ value: 'present', id: 'abc12-3' })]
         }))();
+      });
 
+      it('supports subSpaces in lists', function() {
         assert.deepEqual(this.space.state, {
           initialState: 'here',
           count: 1,
@@ -76,6 +78,11 @@ describe('Space', function() {
           actionChild: { value: 'present' },
           list: [{value: 'present', id: 'abc12-3' }]
         });
+      });
+
+      it('can get spaces from list', function() {
+        const listItemSpace = this.space.subSpace('list', 'abc12-3');
+        assert.equal(listItemSpace.state.value, 'present');
       });
     });
 
