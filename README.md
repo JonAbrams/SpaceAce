@@ -97,10 +97,10 @@ export default function TodoList({ state, doAction, name }) {
   );
 };
 
-// Actions are given the event first, then the space
+// Actions are given the space first, then the event, if it exists.
 // The object that is returned is merged with the space's state
 // In this case the `todos` attribute is overwritten
-function addTodo(e, { state, subSpace }) {
+function addTodo({ state, subSpace }, e) {
   const { todos } = state;
 
   e.preventDefault();
@@ -135,11 +135,11 @@ export default function Todo({ state: todo, doAction }) {
 
 // The returned value from an action is merged onto the existing state
 // In this case, only the `done` attribute is changed on the todo
-function toggleDone(e, { state: todo }) {
+function toggleDone({ state: todo }, e) {
   return { done: !todo.done };
 }
 
-function removeTodo(e) {
+function removeTodo(todoSpace, e) {
   e.preventDefault();
 
   // Returning null from an action causes this space to be removed from its parent
