@@ -21,13 +21,19 @@ describe('Space', function() {
     assert.notEqual(this.space.state, oldState);
   });
 
+  it('actions pass in event', function() {
+    let called = false;
+    this.space.doAction((space, event) => { called = event.called; })({ called: 'once' });
+    assert.equal(called, 'once');
+  });
+
   it('registers subscribers', function() {
     const subscriber = function() { return { success: true }; };
     this.space.subscribe(subscriber);
     assert.equal(this.space.subscribers[0], subscriber);
   });
 
-  describe('adding child spaces', function() {
+  describe('child spaces', function() {
     beforeEach(function() {
       this.subSpaceByName = this.space.subSpace('child');
       this.subSpaceByAction = this.space.doAction(({ subSpace }) => ({
@@ -49,20 +55,6 @@ describe('Space', function() {
       assert.equal(this.space.state.actionChild.value, 'present');
     });
 
-    it('supports subSpaces in lists', function() {
-      this.space.doAction(({ subSpace }) => ({
-        list: [subSpace({ value: 'present', id: 'abc12-3' })]
-      }))();
-
-      assert.deepEqual(this.space.state, {
-        initialState: 'here',
-        count: 1,
-        child: {},
-        actionChild: { value: 'present' },
-        list: [{value: 'present', id: 'abc12-3' }]
-      });
-    });
-
     it('throws list subSpaces missing id', function() {
       assert.throws(() => {
         this.space.doAction(({ subSpace }) => ({
@@ -70,5 +62,23 @@ describe('Space', function() {
         }))();
       });
     });
+
+    describe('child spaces in lists', function() {
+      it('supports subSpaces in lists', function() {
+        this.space.doAction(({ subSpace }) => ({
+          list: [subSpace({ value: 'present', id: 'abc12-3' })]
+        }))();
+
+        assert.deepEqual(this.space.state, {
+          initialState: 'here',
+          count: 1,
+          child: {},
+          actionChild: { value: 'present' },
+          list: [{value: 'present', id: 'abc12-3' }]
+        });
+      });
+    });
+
+
   });
 });
