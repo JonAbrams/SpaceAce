@@ -77,20 +77,20 @@ import react from 'react';
 import uuid from 'uuid/v4';
 import Todo from 'Todo';
 
-export default function TodoList({ state, doAction, name }) {
+export default function TodoList({ state, doAction, subSpace, name }) {
   const { todos } = state;
 
   return(
     <h2>{name}'s Todos:</h2>
     <button onClick={doAction(addTodo)}>Add Todo</button>
     <ul className='todos'>
-      {todos.map(todoSpace =>
+      {todos.map(todo =>
         <Todo
-          {...todoSpace}
+          {...subSpace('todos', todo.id)}
           // the above does the same as:
-          // state={todoSpace.state}
-          // doAction={todoSpace.doAction}
-          key={todoSpace.state.id}
+          // state={subSpace('todos', todo.id).state}
+          // doAction={subSpace('todos', todo.id).doAction}
+          // key={subSpace('todos', todo.id).state.id}
         />
       )}
     </ul>

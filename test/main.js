@@ -84,6 +84,13 @@ describe('Space', function() {
         const listItemSpace = this.space.subSpace('list', 'abc12-3');
         assert.equal(listItemSpace.state.value, 'present');
       });
+
+      it('removes spaces when null is returned from action', function() {
+        const listItemSpace = this.space.subSpace('list', 'abc12-3');
+        assert.equal(this.space.state.list.length, 1);
+        listItemSpace.doAction(() => null)();
+        assert.equal(this.space.state.list.length, 0);
+      });
     });
 
 
