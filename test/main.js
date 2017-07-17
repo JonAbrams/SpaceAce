@@ -10,6 +10,12 @@ describe('Space', function() {
     assert(new Space() instanceof Space);
   });
 
+  it('spaces only have these enumerated keys', function() {
+    const childSpace = this.space.subSpace('child');
+    assert.deepEqual(Object.keys(this.space), ['state', 'doAction', 'subSpace']);
+    assert.deepEqual(Object.keys(childSpace), ['state', 'doAction', 'subSpace']);
+  });
+
   it('has initial state', function() {
     assert.deepEqual(this.space.state, { initialState: 'here', count: 1, child: {} });
   });
