@@ -91,7 +91,7 @@ describe('Space', function() {
         assert.equal(listItemSpace.state.value, 'present');
       });
 
-      it.skip('removes spaces when null is returned from action', function() {
+      it('removes spaces when null is returned from action', function() {
         const listItemSpace = this.space.subSpace('list', 'abc12-3');
         assert.equal(this.space.state.list.length, 1);
         listItemSpace.doAction(() => null)();
