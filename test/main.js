@@ -103,6 +103,11 @@ describe('Space', function() {
         listItemSpace.doAction(() => null)();
         assert.equal(this.space.state.list.length, 0);
       });
+
+      it('provides a key prop', function() {
+        assert('key' in this.space.subSpace('list', 'abc12-3'));
+        assert.equal(this.space.subSpace('list', 'abc12-3').key, 'abc12-3');
+      });
     });
 
 
