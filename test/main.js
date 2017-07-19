@@ -108,6 +108,12 @@ describe('Space', function() {
         assert('key' in this.space.subSpace('list', 'abc12-3'));
         assert.equal(this.space.subSpace('list', 'abc12-3').key, 'abc12-3');
       });
+
+      it('key prop changes when ID changes', function() {
+        const itemSpace = this.space.subSpace('list', 'abc12-3');
+        itemSpace.doAction(() => ({ id: 'abc' }))();
+        assert.equal(this.space.subSpace('list', 'abc12-3').key, 'abc');
+      });
     });
 
 
