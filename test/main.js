@@ -33,11 +33,45 @@ describe('Space', function() {
     assert.equal(called, 'once');
   });
 
-  it('registers subscribers', function() {
-    const subscriber = function() { return { success: true }; };
-    this.space.subscribe(subscriber);
-    assert.equal(this.space.subscribers[0], subscriber);
+  describe('subscribers', function() {
+    beforeEach(function() {
+      this.subscriberCalled = false;
+      this.subscriber = () => {
+        this.subscriberCalled = true;
+        return { success: true };
+      };
+      this.space.subscribe(this.subscriber);
+    });
+
+    it('registers subscribers', function() {
+      assert.equal(this.space.subscribers[0], this.subscriber);
+    });
+
+    it('calls subscribers when state is changed via action', function() {
+      assert(!this.subscriberCalled);
+      this.space.subscribe(space => {
+        assert.equal(space.state.count, 2);
+      });
+      this.space.doAction(() => ({ count: 2 }))();
+      assert(this.subscriberCalled);
+    });
+
+    it('does NOT call subscribers when no value is returned', function() {
+      this.space.subscribe(() => assert(false));
+      this.space.doAction(() => {})();
+    });
+
+    it('sets causedBy', function() {
+      this.space.subscribe((space, causedBy) => {
+        assert.deepEqual(causedBy, ['root#myAction']);
+      });
+
+      this.space.doAction(function myAction() {
+        return { val: 'is set'};
+      })();
+    });
   });
+
 
   describe('child spaces', function() {
     beforeEach(function() {
@@ -114,8 +148,34 @@ describe('Space', function() {
         itemSpace.doAction(() => ({ id: 'abc' }))();
         assert.equal(this.space.subSpace('list', 'abc12-3').key, 'abc');
       });
+
+      it('sets causedBy', function() {
+        const itemSpace = this.space.subSpace('list', 'abc12-3');
+        this.space.subscribe((space, causedBy) => {
+          assert.deepEqual(causedBy, ['list[abc12-3]#myAction', 'root']);
+        });
+
+        itemSpace.doAction(function myAction() {
+          return { val: 'is set'};
+        })();
+      });
     });
 
-
+    describe('children and parent subscribers', function(done) {
+      it('calls subscribers from inside -> out', function() {
+        let timesCalled = 0;
+        // the subspace's subscribers are called before the parent's
+        this.space.subscribe(space => {
+          timesCalled++;
+          assert.equal(timesCalled, 2);
+        });
+        this.subSpaceByName.subscribe(space => {
+          timesCalled++;
+          assert.equal(timesCalled, 1);
+        });
+        this.subSpaceByName.doAction(() => ({ updated: 'happened' }))();
+        assert.equal(timesCalled, 2);
+      });
+    });
   });
 });
