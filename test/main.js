@@ -11,9 +11,10 @@ describe('Space', function() {
   });
 
   it('spaces only have these enumerated keys', function() {
+    const publicMethods = ['state', 'doAction', 'subSpace', 'parentSpace'];
     const childSpace = this.space.subSpace('child');
-    assert.deepEqual(Object.keys(this.space), ['state', 'doAction', 'subSpace']);
-    assert.deepEqual(Object.keys(childSpace), ['state', 'doAction', 'subSpace']);
+    assert.deepEqual(Object.keys(this.space), publicMethods);
+    assert.deepEqual(Object.keys(childSpace), publicMethods);
   });
 
   it('has initial state', function() {
@@ -107,6 +108,13 @@ describe('Space', function() {
           list: [subSpace({ value: 'present' })]
         }))();
       });
+    });
+
+    it('can reference parent spaces by name', function() {
+      const grandChild = this.subSpaceByName.subSpace('gc');
+      assert.equal(this.subSpaceByName.parentSpace('root'), this.space);
+      assert.equal(grandChild.parentSpace('root'), this.space);
+      assert.equal(grandChild.parentSpace('child'), this.subSpaceByName);
     });
 
     describe('child spaces in lists', function() {
