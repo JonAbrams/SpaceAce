@@ -10,6 +10,14 @@ describe('Space', function() {
     assert(new Space() instanceof Space);
   });
 
+  it('calls initialized subscriber', function(done) {
+    const space = new Space();
+    space.subscribe(function (space, causedBy) {
+      assert.deepEqual(causedBy, ['initialized']);
+      done();
+    });
+  });
+
   it('spaces only have these enumerated keys', function() {
     const publicMethods = ['state', 'doAction', 'subSpace', 'parentSpace'];
     const childSpace = this.space.subSpace('child');
