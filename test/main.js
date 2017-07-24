@@ -91,7 +91,7 @@ describe('Space', function() {
   describe('child spaces', function() {
     beforeEach(function() {
       this.subSpaceByName = this.space.subSpace('child');
-      this.subSpaceByAction = this.space.doAction(({ subSpace }) => ({
+      this.space.doAction(({ subSpace }) => ({
         actionChild: subSpace({ value: 'present' })
       }))();
     });
@@ -103,6 +103,11 @@ describe('Space', function() {
 
     it('uses existing sub space', function() {
       assert.equal(this.space.subSpace('child'), this.subSpaceByName);
+    });
+
+    it('gives empty state by default', function() {
+      assert.deepEqual(this.space.subSpace('emptyChild').preState, {});
+      assert.deepEqual(this.space.subSpace('emptyChild').state, {});
     });
 
     it('supports adding subspaces by action', function() {
@@ -129,6 +134,35 @@ describe('Space', function() {
       assert.equal(this.subSpaceByName.parentSpace('root'), this.space);
       assert.equal(grandChild.parentSpace('root'), this.space);
       assert.equal(grandChild.parentSpace('child'), this.subSpaceByName);
+    });
+
+    it('can update siblings', function() {
+      this.subSpaceByName.parentSpace('root').doAction(() => ({
+        actionChild: {
+          addedValue: 'present'
+        }
+      }))();
+      assert.equal(this.space.subSpace('actionChild').state.addedValue, 'present');
+    });
+
+    it('can update nephews', function() {
+      this.space.subSpace('actionChild').subSpace('actionChildChild').doAction(() => ({
+        value: 'starting'
+      }))();
+      this.subSpaceByName.parentSpace('root').doAction(() => ({
+        actionChild: {
+          actionChildChild: {
+            addedValue: 'present'
+          }
+        }
+      }))();
+      assert.deepEqual(
+        this.space.subSpace('actionChild').subSpace('actionChildChild').state,
+        {
+          addedValue: 'present',
+          value: 'starting'
+        }
+      );
     });
 
     describe('child spaces in lists', function() {
