@@ -10,7 +10,7 @@ describe('Space', function() {
     assert(new Space() instanceof Space);
   });
 
-  it('calls initialized subscriber', function(done) {
+  it('calls subscriber on subscribing', function(done) {
     const space = new Space();
     space.subscribe(function (space, causedBy) {
       assert.deepEqual(causedBy, ['initialized']);
@@ -45,7 +45,8 @@ describe('Space', function() {
   describe('subscribers', function() {
     beforeEach(function() {
       this.subscriberCalled = false;
-      this.subscriber = () => {
+      this.subscriber = (space, causedBy) => {
+        if (causedBy[0] === 'initialized') return;
         this.subscriberCalled = true;
         return { success: true };
       };
@@ -58,7 +59,8 @@ describe('Space', function() {
 
     it('calls subscribers when state is changed via action', function() {
       assert(!this.subscriberCalled);
-      this.space.subscribe(space => {
+      this.space.subscribe((space, causedBy) => {
+        if (causedBy[0] === 'initialized') return;
         assert.equal(space.state.count, 2);
       });
       this.space.doAction(() => ({ count: 2 }))();
@@ -66,12 +68,16 @@ describe('Space', function() {
     });
 
     it('does NOT call subscribers when no value is returned', function() {
-      this.space.subscribe(() => assert(false));
+      this.space.subscribe((space, causedBy) => {
+        if (causedBy[0] === 'initialized') return;
+        assert(false)
+      });
       this.space.doAction(() => {})();
     });
 
     it('sets causedBy', function() {
       this.space.subscribe((space, causedBy) => {
+        if (causedBy[0] === 'initialized') return;
         assert.deepEqual(causedBy, ['root#myAction']);
       });
 
@@ -168,6 +174,7 @@ describe('Space', function() {
       it('sets causedBy', function() {
         const itemSpace = this.space.subSpace('list', 'abc12-3');
         this.space.subscribe((space, causedBy) => {
+          if (causedBy[0] === 'initialized') return;
           assert.deepEqual(causedBy, ['list[abc12-3]#myAction', 'root']);
         });
 
@@ -177,15 +184,17 @@ describe('Space', function() {
       });
     });
 
-    describe('children and parent subscribers', function(done) {
+    describe('children and parent subscribers', function() {
       it('calls subscribers from inside -> out', function() {
         let timesCalled = 0;
         // the subspace's subscribers are called before the parent's
-        this.space.subscribe(space => {
+        this.space.subscribe((space, causedBy) => {
+          if (causedBy[0] === 'initialized') return;
           timesCalled++;
           assert.equal(timesCalled, 2);
         });
-        this.subSpaceByName.subscribe(space => {
+        this.subSpaceByName.subscribe((space, causedBy) => {
+          if (causedBy[0] === 'initialized') return;
           timesCalled++;
           assert.equal(timesCalled, 1);
         });
