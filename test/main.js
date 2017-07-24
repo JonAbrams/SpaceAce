@@ -106,7 +106,7 @@ describe('Space', function() {
     });
 
     it('supports adding subspaces by action', function() {
-      assert(this.space.children.actionChild);
+      assert(this.space.preState.actionChild instanceof Space);
       assert.equal(this.space.state.actionChild.value, 'present');
     });
 
@@ -168,7 +168,7 @@ describe('Space', function() {
       it('key prop changes when ID changes', function() {
         const itemSpace = this.space.subSpace('list', 'abc12-3');
         itemSpace.doAction(() => ({ id: 'abc' }))();
-        assert.equal(this.space.subSpace('list', 'abc12-3').key, 'abc');
+        assert.equal(this.space.subSpace('list', 'abc').key, 'abc');
       });
 
       it('sets causedBy', function() {
