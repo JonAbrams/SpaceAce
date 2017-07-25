@@ -34,7 +34,7 @@ That all sounds nice but it has its problems:
 SpaceAce can be used with any front-end view library (in theory), but the examples below are done with React.
 
 **index.js**
-```javascript
+```jsx
 import react from 'react';
 import ReactDOM from 'react-dom';
 import Space from 'spaceace';
@@ -54,7 +54,7 @@ rootSpace.subscribe(causedBy => {
 ```
 
 **Container.js**
-```javascript
+```jsx
 import react from 'react';
 import TodoList from './TodoList';
 
@@ -156,16 +156,129 @@ function removeTodo(todoSpace, e) {
 `Space` is the default class provided by the `spaceace` npm package.
 
 Every `space` consists of:
-- An immutable state, which can only be overwritten using an action.
-- A method for subscribing to updates
+- `state`: An immutable state, which can only be overwritten using an action.
+- `subscribe`: A method for subscribing to updates.
+- `doAction`: A method for creating actions that update the space's state.
+- `subSpace`: A method for spawning or attaching child spaces.
 
 You create a new space by calling `new Space(…)` e.g.
 ```javascript
 const rootSpace = new Space({ initialState: true, todoList: { todos: [] } });
 ```
 
-### Child Spaces (aka sub spaces)
+### state
+
+`state` is a getter method on every space. It generates a frozen/immutable object
+that can be used to render a view. It includes the state of any child spaces as well.
+
+### subscribe
+
+Registers a callback function to be called whenever the space's state is updated.
+This includes if a child space's state is updated.
+
+It calls the subscriber with a single parameter: `causedBy`, which specifies why
+the subscriber was invoked. It's useful for debugging purposes. The format of
+`causedBy` is `spaceName#actionName`.
+
+e.g.
+```javascript
+userSpace.subscribe(causedBy => {
+  console.log('Re-rendered by: ', causedBy);
+  ReactDOM.render(
+    <Component {...userSpace} />,
+    document.getElementById('#react-container')
+  );
+});
+```
+
+### doAction
+
+Given a function, `doAction` wraps it and returns a function that will take the
+returned object of the original function and merge it onto the space's state.
+
+The function is called with the space as a parameter. This often saves you from
+needing to bind `this` to your event handlers.
+
+If `null` is returned from a space that is a list item, then the space is removed
+from the list it is in.
+
+`doAction` is generally called when being passed to an event handler.
+
+e.g. Given the following React component:
+```jsx
+class SignupModal extends React.Component {
+  closeModal() {
+    return { isOpen: false };
+  }
+
+  toggleMinify({ state }) {
+    return { isMinified: !state.isMinified };
+  }
+
+  render() {
+    const { state, doAction, subSpace } = this.props;
+    return (
+      <Modal isOpen={state.isOpen}>
+        <SignupForm {...subSpace('signupForm')}
+        <a href='#' onClick={doAction(this.closeModal)}>&times;</a>
+        <a href='#' onClick={doAction(this.toggleMinify)}>
+          {state.isMinified ? 'Expand' : 'Shrink'}
+        </a>
+      </Modal>
+    )
+  }
+}
+```
+
+### subSpace
 
 One of the main feature of SpaceAce is the ability to break up a store into individual sub-stores, or spaces. Any space, whether it's a root or a child, can _spawn_ or _attach_ spaces to themselves.
 
 When a child space's state is updated, it notifies its parent space, which in turn updates its state (which includes the child's state), and so on.
+
+#### Spawning Children
+
+Calling `subSpace` with a string as the only parameter will turn that attribute
+of a space into a child space.
+
+e.g. Given a space called `userSpace` with this state:
+```javascript
+{
+  name: 'Jon',
+  settings: {
+    nightMode: true,
+    fontSize: 12
+  }
+}
+```
+
+You can convert the `settings` into a child space with `userSpace.subSpace('settings')`.
+
+Note that even though `settings` is now a space, the state of `userSpace` hasn't changed.
+At least not until the `settings` space is updated with a change.
+
+#### Attaching Children
+
+If there isn't an existing part of a space's state that can be converted, you can
+create a new space (with an initial state) and attach it to its parent's state.
+This is very useful when you create spaces that go into a list.
+
+e.g. Given a `userSpace` with this state:
+```javascript
+{
+  name: 'Jon',
+  comments: []
+}
+```
+
+You can add comment spaces to the parent space with the following action:
+```javascript
+addComment({ state, subSpace }) {
+  return {
+    comments: state.comments.concat(subSpace({
+      message: 'This is a new comment',
+      id: uuid()
+    }))
+  };
+}
+```
