@@ -72,7 +72,7 @@ export default function Container({ state, doAction, subSpace }) {
 ```
 
 **TodoList.js**
-```javascript
+```jsx
 import react from 'react';
 import uuid from 'uuid/v4';
 import Todo from 'Todo';
