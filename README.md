@@ -219,7 +219,7 @@ class SignupModal extends React.Component {
     const { state, doAction, subSpace } = this.props;
     return (
       <Modal isOpen={state.isOpen}>
-        <SignupForm {...subSpace('signupForm')}
+        <SignupForm {...subSpace('signupForm')} />
         <a href='#' onClick={doAction(this.closeModal)}>&times;</a>
         <a href='#' onClick={doAction(this.toggleMinify)}>
           {state.isMinified ? 'Expand' : 'Shrink'}
