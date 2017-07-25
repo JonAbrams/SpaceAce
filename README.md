@@ -41,13 +41,12 @@ import Container from './Container';
 
 // Create the root "space" along with its initial state
 const rootSpace = new Space({ name: 'Jon', todoList: { todos: [] } });
-rootSpace.actions.subscribe((space, causedBy, changes) => {
+rootSpace.subscribe(causedBy => {
   // Example `causedBy`s:
-  // ['initialized'], ['todoList#addTodo'], ['todos[akd4a1plj]#toggleDone', 'todoList', 'root']
-  console.log(`Re-render of <Container /> caused by ${causedBy.join(', ')}`);
+  // 'todoList#addTodo', 'todos[akd4a1plj]#toggleDone'
+  console.log(`Re-render of <Container /> caused by ${causedBy}`);
   ReactDOM.render(
-    <Container {...rootSpace} />,
-    // ^ same as <Container state={rootSpace.state} actions={rootSpace.actions} />
+    <Container {...rootSpace} />, // Passes in space's default props automatically
     document.getElementById('react-container')
   );
 });
