@@ -202,16 +202,20 @@ needing to bind `this` to your event handlers.
 If `null` is returned from a space that is a list item, then the space is removed
 from the list it is in.
 
-`doAction` is generally called when being passed to an event handler.
+`doAction` is generally called when being passed to an event handler, the event
+is passed in as the second parameter, useful for calling `preventDefault()` or
+for figuring out the key that was pressed for keyboard events.
 
 e.g. Given the following React component:
 ```jsx
 class SignupModal extends React.Component {
-  closeModal() {
+  closeModal(space, e) {
+    e.preventDefault();
     return { isOpen: false };
   }
 
-  toggleMinify({ state }) {
+  toggleMinify({ state }, e) {
+    e.preventDefault();
     return { isMinified: !state.isMinified };
   }
 
