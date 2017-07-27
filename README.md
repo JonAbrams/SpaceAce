@@ -286,3 +286,11 @@ addComment({ state, subSpace }) {
   };
 }
 ```
+
+## License
+
+MIT
+
+## Author
+
+Created with the best of intentions by [Jon Abrams](https://twitter.com/JonathanAbrams)
