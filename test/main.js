@@ -10,6 +10,11 @@ describe('Space', function() {
     assert(new Space() instanceof Space);
   });
 
+  it('instance is frozen', function () {
+    assert(Object.isFrozen(this.space.state));
+    assert(Object.isFrozen(this.space.state.child));
+  });
+
   it('calls subscriber on subscribing', function(done) {
     const space = new Space();
     space.subscribe(causedBy => {
