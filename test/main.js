@@ -172,7 +172,10 @@ describe('Space', function() {
     describe('child spaces in lists', function() {
       beforeEach(function() {
         this.space.doAction(({ subSpace }) => ({
-          list: [subSpace({ value: 'present', id: 'abc12-3' })]
+          list: [
+            subSpace({ value: 'present', id: 'abc12-3' }),
+            { notSubSpace: true, id: 'not-sub-space' }
+          ]
         }))();
       });
 
@@ -182,7 +185,10 @@ describe('Space', function() {
           count: 1,
           child: {},
           actionChild: { value: 'present' },
-          list: [{value: 'present', id: 'abc12-3' }]
+          list: [
+            {value: 'present', id: 'abc12-3' },
+            { notSubSpace: true, id: 'not-sub-space' }
+          ]
         });
       });
 
@@ -191,11 +197,16 @@ describe('Space', function() {
         assert.equal(listItemSpace.state.value, 'present');
       });
 
+      it('can turn non-spaces into spaces from list', function() {
+        const listItemSpace = this.space.subSpace('list', 'not-sub-space');
+        assert(listItemSpace.state.notSubSpace);
+      });
+
       it('removes spaces when null is returned from action', function() {
         const listItemSpace = this.space.subSpace('list', 'abc12-3');
-        assert.equal(this.space.state.list.length, 1);
+        assert.equal(this.space.state.list.length, 2);
         listItemSpace.doAction(() => null)();
-        assert.equal(this.space.state.list.length, 0);
+        assert.equal(this.space.state.list.length, 1);
       });
 
       it('provides a key prop', function() {
