@@ -193,6 +193,10 @@ userSpace.subscribe(causedBy => {
 
 ### doAction
 
+Given an object, `doAction` merges it into the space's state. If the object contains
+any other spaces, they become children of `doAction`'s space. Pass in a second parameter
+to give the update a name, for logging purposes.
+
 Given a function, `doAction` wraps it and returns a function that will take the
 returned object of the original function and merge it onto the space's state.
 
@@ -202,9 +206,9 @@ needing to bind `this` to your event handlers.
 If `null` is returned from a space that is a list item, then the space is removed
 from the list it is in.
 
-`doAction` is generally called when being passed to an event handler, the event
-is passed in as the second parameter, useful for calling `preventDefault()` or
-for figuring out the key that was pressed for keyboard events.
+`doAction` is generally called with a function when being passed to an event handler,
+the event is passed in as the second parameter, useful for calling `preventDefault()`
+or for figuring out the key that was pressed for keyboard events.
 
 e.g. Given the following React component:
 ```jsx

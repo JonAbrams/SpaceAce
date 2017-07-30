@@ -41,6 +41,17 @@ describe('Space', function() {
     assert.notEqual(this.space.state, oldState);
   });
 
+  it('can update directly', function(done) {
+    const oldState = this.space.state;
+    this.space.subscribe(causedBy => {
+      if (causedBy === 'initialized') return;
+      assert.equal(causedBy, 'root#unknown');
+      done();
+    });
+    this.space.doAction({ count: 42 });
+    assert.deepEqual(this.space.state, { initialState: 'here', count: 42, child: {} });
+  });
+
   it('actions pass in event', function() {
     let called = false;
     this.space.doAction((space, event) => { called = event.called; })({ called: 'once' });
