@@ -174,7 +174,7 @@ describe('Space', function() {
         this.space.doAction(({ subSpace }) => ({
           list: [
             subSpace({ value: 'present', id: 'abc12-3' }),
-            { notSubSpace: true, id: 'not-sub-space' }
+            { notSubSpace: true, id: '1234' }
           ]
         }))();
       });
@@ -187,7 +187,7 @@ describe('Space', function() {
           actionChild: { value: 'present' },
           list: [
             {value: 'present', id: 'abc12-3' },
-            { notSubSpace: true, id: 'not-sub-space' }
+            { notSubSpace: true, id: 1234 }
           ]
         });
       });
@@ -198,14 +198,14 @@ describe('Space', function() {
       });
 
       it('can turn non-spaces into spaces from list', function() {
-        const listItemSpace = this.space.subSpace('list', 'not-sub-space');
+        const listItemSpace = this.space.subSpace('list', '1234');
         assert(listItemSpace.state.notSubSpace);
         assert.equal(listItemSpace.nextParent, this.space);
       });
 
       it('can respawn list spaces', function() {
-        let listItemSpace = this.space.subSpace('list', 'not-sub-space');
-        listItemSpace = this.space.subSpace('list', 'not-sub-space');
+        let listItemSpace = this.space.subSpace('list', '1234');
+        listItemSpace = this.space.subSpace('list', '1234');
         assert(listItemSpace.state.notSubSpace);
       });
 
