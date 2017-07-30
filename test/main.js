@@ -203,6 +203,12 @@ describe('Space', function() {
         assert.equal(listItemSpace.nextParent, this.space);
       });
 
+      it('can respawn list spaces', function() {
+        let listItemSpace = this.space.subSpace('list', 'not-sub-space');
+        listItemSpace = this.space.subSpace('list', 'not-sub-space');
+        assert(listItemSpace.state.notSubSpace);
+      });
+
       it('removes spaces when null is returned from action', function() {
         const listItemSpace = this.space.subSpace('list', 'abc12-3');
         assert.equal(this.space.state.list.length, 2);
