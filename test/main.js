@@ -200,6 +200,7 @@ describe('Space', function() {
       it('can turn non-spaces into spaces from list', function() {
         const listItemSpace = this.space.subSpace('list', 'not-sub-space');
         assert(listItemSpace.state.notSubSpace);
+        assert.equal(listItemSpace.nextParent, this.space);
       });
 
       it('removes spaces when null is returned from action', function() {
