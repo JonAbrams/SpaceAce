@@ -24,7 +24,7 @@ describe('Space', function() {
   });
 
   it('spaces only have these enumerated keys', function() {
-    const publicMethods = ['state', 'doAction', 'subSpace', 'parentSpace'];
+    const publicMethods = ['state', 'setState', 'subSpace', 'parentSpace'];
     const childSpace = this.space.subSpace('child');
     assert.deepEqual(Object.keys(this.space), publicMethods);
     assert.deepEqual(Object.keys(childSpace), publicMethods);
@@ -36,7 +36,7 @@ describe('Space', function() {
 
   it('updates the state', function() {
     const oldState = this.space.state;
-    this.space.doAction(({ state }) => ({ count: state.count + 1 }))();
+    this.space.setState(({ state }) => ({ count: state.count + 1 }))();
     assert.deepEqual(this.space.state, { initialState: 'here', count: 2, child: {} });
     assert.notEqual(this.space.state, oldState);
   });
@@ -48,13 +48,13 @@ describe('Space', function() {
       assert.equal(causedBy, 'root#unknown');
       done();
     });
-    this.space.doAction({ count: 42 });
+    this.space.setState({ count: 42 });
     assert.deepEqual(this.space.state, { initialState: 'here', count: 42, child: {} });
   });
 
   it('actions pass in event', function() {
     let called = false;
-    this.space.doAction((space, event) => { called = event.called; })({ called: 'once' });
+    this.space.setState((space, event) => { called = event.called; })({ called: 'once' });
     assert.equal(called, 'once');
   });
 
@@ -78,7 +78,7 @@ describe('Space', function() {
         if (causedBy === 'initialized') return;
         assert.equal(this.space.state.count, 2);
       });
-      this.space.doAction(() => ({ count: 2 }))();
+      this.space.setState(() => ({ count: 2 }))();
       assert(this.subscriberCalled);
     });
 
@@ -87,7 +87,7 @@ describe('Space', function() {
         if (causedBy === 'initialized') return;
         assert(false);
       });
-      this.space.doAction(() => {})();
+      this.space.setState(() => {})();
     });
 
     it('sets causedBy', function() {
@@ -96,7 +96,7 @@ describe('Space', function() {
         assert.deepEqual(causedBy, 'root#myAction');
       });
 
-      this.space.doAction(function myAction() {
+      this.space.setState(function myAction() {
         return { val: 'is set'};
       })();
     });
@@ -106,13 +106,13 @@ describe('Space', function() {
   describe('child spaces', function() {
     beforeEach(function() {
       this.subSpaceByName = this.space.subSpace('child');
-      this.space.doAction(({ subSpace }) => ({
+      this.space.setState(({ subSpace }) => ({
         actionChild: subSpace({ value: 'present' })
       }))();
     });
 
     it('propagates changes upwards', function() {
-      this.subSpaceByName.doAction(() => ({ value: 'is there' }))();
+      this.subSpaceByName.setState(() => ({ value: 'is there' }))();
       assert.equal(this.space.state.child.value, 'is there');
     });
 
@@ -132,13 +132,13 @@ describe('Space', function() {
 
     it('removes spaces by returning null for that space', function() {
       assert(this.space.state.child);
-      this.space.doAction(() => ({ child: null }))();
+      this.space.setState(() => ({ child: null }))();
       assert.equal(this.space.state.child, null);
     });
 
     it('throws list subSpaces missing id', function() {
       assert.throws(() => {
-        this.space.doAction(({ subSpace }) => ({
+        this.space.setState(({ subSpace }) => ({
           list: [subSpace({ value: 'present' })]
         }))();
       });
@@ -152,7 +152,7 @@ describe('Space', function() {
     });
 
     it('can update siblings', function() {
-      this.subSpaceByName.parentSpace('root').doAction(() => ({
+      this.subSpaceByName.parentSpace('root').setState(() => ({
         actionChild: {
           addedValue: 'present'
         }
@@ -161,10 +161,10 @@ describe('Space', function() {
     });
 
     it('can update nephews', function() {
-      this.space.subSpace('actionChild').subSpace('actionChildChild').doAction(() => ({
+      this.space.subSpace('actionChild').subSpace('actionChildChild').setState(() => ({
         value: 'starting'
       }))();
-      this.subSpaceByName.parentSpace('root').doAction(() => ({
+      this.subSpaceByName.parentSpace('root').setState(() => ({
         actionChild: {
           actionChildChild: {
             addedValue: 'present'
@@ -182,7 +182,7 @@ describe('Space', function() {
 
     describe('child spaces in lists', function() {
       beforeEach(function() {
-        this.space.doAction(({ subSpace }) => ({
+        this.space.setState(({ subSpace }) => ({
           list: [
             subSpace({ value: 'present', id: 'abc12-3' }),
             { notSubSpace: true, id: '1234' }
@@ -223,7 +223,7 @@ describe('Space', function() {
       it('removes spaces when null is returned from action', function() {
         const listItemSpace = this.space.subSpace('list', 'abc12-3');
         assert.equal(this.space.state.list.length, 2);
-        listItemSpace.doAction(() => null)();
+        listItemSpace.setState(() => null)();
         assert.equal(this.space.state.list.length, 1);
       });
 
@@ -234,7 +234,7 @@ describe('Space', function() {
 
       it('key prop changes when ID changes', function() {
         const itemSpace = this.space.subSpace('list', 'abc12-3');
-        itemSpace.doAction(() => ({ id: 'abc' }))();
+        itemSpace.setState(() => ({ id: 'abc' }))();
         assert.equal(this.space.subSpace('list', 'abc').key, 'abc');
       });
 
@@ -245,7 +245,7 @@ describe('Space', function() {
           assert.equal(causedBy, 'list[abc12-3]#myAction');
         });
 
-        itemSpace.doAction(function myAction() {
+        itemSpace.setState(function myAction() {
           return { val: 'is set'};
         })();
       });
@@ -265,7 +265,7 @@ describe('Space', function() {
           timesCalled++;
           assert.equal(timesCalled, 1);
         });
-        this.subSpaceByName.doAction(() => ({ updated: 'happened' }))();
+        this.subSpaceByName.setState(() => ({ updated: 'happened' }))();
         assert.equal(timesCalled, 2);
       });
     });

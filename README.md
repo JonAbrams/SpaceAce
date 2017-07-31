@@ -29,7 +29,10 @@ That all sounds nice but it has its problems:
 - It's hard to architect the application code around this concept. People often put all their actions in a single `actions.js`, and end up with a giant reducer in `reducer.js`. This goes against the goal of keeping all the code relevant to a component in a single file.
 - This pattern results in a lot of boilerplate code. Actions are defined in one file, referenced multiple times in the same file, and then referenced in the app reducer. It'd be nice to define an action once, in the component that uses it, and then just call it.
 
-## Usage
+If you never used Redux and didn't understand that, don't worry, you don't need to with
+SpaceAce.
+
+## Example Usage
 
 SpaceAce can be used with any front-end view library (in theory), but the examples below are done with React.
 
@@ -47,7 +50,7 @@ rootSpace.subscribe(causedBy => {
   // 'todoList#addTodo', 'todos[akd4a1plj]#toggleDone'
   console.log(`Re-render of <Container /> caused by ${causedBy}`);
   ReactDOM.render(
-    <Container {...rootSpace} />, // Passes in space's default props automatically
+    <Container space={rootSpace} />,
     document.getElementById('react-container')
   );
 });
@@ -58,13 +61,13 @@ rootSpace.subscribe(causedBy => {
 import react from 'react';
 import TodoList from './TodoList';
 
-export default function Container({ state, doAction, subSpace }) {
+export default function Container({ space }) {
   return (
     <div>
       <h1>Welcome {state.name}</h1>
       <TodoList
         // Create/Get child space that uses/takes over `state.todoList`
-        {...subSpace('todoList')}
+        space={space.subSpace('todoList')}
         name={state.name}
       />
     </div>
@@ -77,40 +80,34 @@ import react from 'react';
 import uuid from 'uuid/v4';
 import Todo from 'Todo';
 
-export default function TodoList({ state, doAction, subSpace, name }) {
-  const { todos } = state;
+export default function TodoList({ space, name }) {
+  const { todos } = space.state;
 
   return(
     <h2>{name}'s Todos:</h2>
-    <button onClick={doAction(addTodo)}>Add Todo</button>
+    <button onClick={space.setState(addTodo)}>Add Todo</button>
     <ul className='todos'>
       {todos.map(todo =>
-        <Todo
-          {...subSpace('todos', todo.id)}
-          // the above does the same as:
-          // state={subSpace('todos', todo.id).state}
-          // doAction={subSpace('todos', todo.id).doAction}
-          // key={subSpace('todos', todo.id).state.id}
-        />
+        <Todo space={space.subSpace('todos', todo.id)} />
       )}
     </ul>
   );
 };
 
-// Actions are given the space first, then the event, if it exists.
+// setState callbacks are given the space first, then the event, if it exists.
 // The object that is returned is merged with the space's state
 // In this case the `todos` attribute is overwritten
-function addTodo({ state, subSpace }, e) {
-  const { todos } = state;
+function addTodo({ space }, e) {
+  const { todos } = space.state;
 
   e.preventDefault();
 
   return {
     todos: [
-      // space(…) creates a space for the todo, with an initial state
-      // All spaces that exist in a list, like this one, need a unique 'id' or
-      // 'key' attribute
-      subSpace({ id: uuid(), msg: '', done: false })
+      // subSpace(…) creates a space for the todo, with an initial state
+      // All spaces that exist in a list, like this one, need a unique 'id'
+      // uuid() is used to generate a unique 'id'
+      space.subSpace({ id: uuid(), msg: 'A new TODO', done: false })
      ].concat(todos)
    };
  }
@@ -118,17 +115,19 @@ function addTodo({ state, subSpace }, e) {
 ```
 
 **Todo.js**
-```javascript
+```jsx
 import react from 'react';
 
-export default function Todo({ state: todo, doAction }) {
+export default function Todo({ space }) {
+  const todo = space.state; // The entire state is the todo
+  const { setState } = space;
   const doneClassName = todo.done ? 'done' : '';
 
   return(
     <li className='todo'>
-      <input type='checkbox' checked={done} onChange={doAction(toggleDone)} />
+      <input type='checkbox' checked={done} onChange={setState(toggleDone)} />
       <span className={doneClassName}>{todo.msg}</span>
-      <button onClick={doAction(removeTodo)}>Remove Todo</button>
+      <button onClick={setState(removeTodo)}>Remove Todo</button>
     </li>
   );
 };
@@ -142,7 +141,7 @@ function toggleDone({ state: todo }, e) {
 function removeTodo(todoSpace, e) {
   e.preventDefault();
 
-  // Returning null from an action causes this space to be removed from its parent
+  // Returning null to setState causes this space to be removed from its parent
   // In this case, this causes this todo to be removed from the parent's list
   // of todos
   return null;
@@ -158,7 +157,7 @@ function removeTodo(todoSpace, e) {
 Every `space` consists of:
 - `state`: An immutable state, which can only be overwritten using an action.
 - `subscribe`: A method for subscribing to updates.
-- `doAction`: A method for creating actions that update the space's state.
+- `setState`: A method for changing a space's state. Accepts an object or function.
 - `subSpace`: A method for spawning or attaching child spaces.
 
 You create a new space by calling `new Space(…)` e.g.
@@ -178,26 +177,26 @@ This includes if a child space's state is updated.
 
 It calls the subscriber with a single parameter: `causedBy`, which specifies why
 the subscriber was invoked. It's useful for debugging purposes. The format of
-`causedBy` is `spaceName#actionName`.
+`causedBy` is `spaceName#functionName`.
 
 e.g.
-```javascript
+```jsx
 userSpace.subscribe(causedBy => {
   console.log('Re-rendered by: ', causedBy);
   ReactDOM.render(
     <Component {...userSpace} />,
-    document.getElementById('#react-container')
+    document.getElementById('react-container')
   );
 });
 ```
 
-### doAction
+### setState
 
-Given an object, `doAction` merges it into the space's state. If the object contains
-any other spaces, they become children of `doAction`'s space. Pass in a second parameter
+Given an object, `setState` merges it into the space's state. If the object contains
+any other spaces, they become children of `setState`'s space. Pass in a second parameter
 to give the update a name, for logging purposes.
 
-Given a function, `doAction` wraps it and returns a function that will take the
+Given a function, `setState` wraps it and returns a function that will take the
 returned object of the original function and merge it onto the space's state.
 
 The function is called with the space as a parameter. This often saves you from
@@ -206,7 +205,7 @@ needing to bind `this` to your event handlers.
 If `null` is returned from a space that is a list item, then the space is removed
 from the list it is in.
 
-`doAction` is generally called with a function when being passed to an event handler,
+`setState` is generally called with a function when being passed to an event handler,
 the event is passed in as the second parameter, useful for calling `preventDefault()`
 or for figuring out the key that was pressed for keyboard events.
 
@@ -224,12 +223,12 @@ class SignupModal extends React.Component {
   }
 
   render() {
-    const { state, doAction, subSpace } = this.props;
+    const { state, setState, subSpace } = this.props;
     return (
       <Modal isOpen={state.isOpen}>
         <SignupForm {...subSpace('signupForm')} />
-        <a href='#' onClick={doAction(this.closeModal)}>&times;</a>
-        <a href='#' onClick={doAction(this.toggleMinify)}>
+        <a href='#' onClick={setState(this.closeModal)}>&times;</a>
+        <a href='#' onClick={setState(this.toggleMinify)}>
           {state.isMinified ? 'Expand' : 'Shrink'}
         </a>
       </Modal>
@@ -279,16 +278,14 @@ e.g. Given a `userSpace` with this state:
 }
 ```
 
-You can add comment spaces to the parent space with the following action:
+You can add new comment _spaces_ to the parent space with the following setState call:
 ```javascript
-addComment({ state, subSpace }) {
-  return {
-    comments: state.comments.concat(subSpace({
-      message: 'This is a new comment',
-      id: uuid()
-    }))
-  };
-}
+userSpace.setState({
+  comments: userSpace.state.comments.concat(userSpace.subSpace({
+    message: 'This is a new comment',
+    id: uuid()
+  })
+});
 ```
 
 ## License
