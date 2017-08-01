@@ -279,7 +279,7 @@ e.g. Given a `userSpace` with this state:
 ```
 
 You can add new comment _spaces_ to the parent space with the following setState call:
-```javascript
+```jsx
 userSpace.setState({
   comments: userSpace.state.comments.concat(userSpace.subSpace({
     message: 'This is a new comment',
@@ -287,6 +287,12 @@ userSpace.setState({
   })
 });
 ```
+
+## Live Example
+
+Here's a quick and dirty example app that uses SpaceAce that you can play around with online:
+
+https://codesandbox.io/s/KKPoM83G
 
 ## License
 
