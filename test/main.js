@@ -234,7 +234,7 @@ describe('Space', function() {
 
       it('key prop changes when ID changes', function() {
         const itemSpace = this.space.subSpace('list', 'abc12-3');
-        itemSpace.setState(() => ({ id: 'abc' }))();
+        itemSpace.setState({ id: 'abc' });
         assert.equal(this.space.subSpace('list', 'abc').key, 'abc');
       });
 
