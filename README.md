@@ -2,15 +2,13 @@
 
 A fancy immutable storage library for JavaScript
 
-## Status
-
-Some code exists, but is very much a WIP. Docs/API not yet finalized. Any feedback or ideas are welcome!
-
 [![Build Status](https://travis-ci.org/JonAbrams/SpaceAce.svg?branch=master)](https://travis-ci.org/JonAbrams/SpaceAce)
 
-## Goal
+## Intro
 
-To be as powerful and useful as Redux, but more modular with an easier to use API.
+The goal is a library that is as powerful and useful as Redux, but more modular with an easier to use API.
+
+Any and all feedback is welcome!
 
 ## Background
 
