@@ -1,5 +1,5 @@
 const assert = require('assert');
-const Space = require('../index');
+const Space = require('../lib/Space');
 
 describe('Space', function() {
   beforeEach(function() {

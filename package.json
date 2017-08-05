@@ -1,12 +1,10 @@
 {
   "name": "spaceace",
-  "version": "0.9.12",
+  "version": "0.9.13",
   "description": "A fancy immutable storage library for JavaScript",
-  "main": "index.js",
+  "main": "lib/Space.js",
   "scripts": {
-    "test": "mocha",
-    "build": "webpack",
-    "prepublishOnly": "npm run build"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -28,6 +26,5 @@
     "mocha": "^3.4.2",
     "webpack": "^3.4.1"
   },
-  "dependencies": {},
-  "browser": "dist/bundle.js"
+  "dependencies": {}
 }
