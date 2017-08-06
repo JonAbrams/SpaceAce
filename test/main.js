@@ -12,7 +12,6 @@ describe('Space', function() {
 
   it('instance is frozen', function () {
     assert(Object.isFrozen(this.space.state));
-    assert(Object.isFrozen(this.space.state.child));
   });
 
   it('calls subscriber on subscribing', function(done) {
