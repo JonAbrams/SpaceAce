@@ -57,6 +57,15 @@ describe('Space', function() {
     assert.equal(called, 'once');
   });
 
+  it('can specify action name', function() {
+    this.space.subscribe(causedBy => {
+      if (causedBy === 'initialized') return;
+      assert.equal(causedBy, 'root#customName');
+    });
+    this.space.setState({ val: true}, 'customName');
+    this.space.setState(() => ({ val: true}), 'customName');
+  });
+
   describe('subscribers', function() {
     beforeEach(function() {
       this.subscriberCalled = false;
