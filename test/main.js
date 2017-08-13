@@ -3,7 +3,11 @@ const Space = require('../lib/Space');
 
 describe('Space', function() {
   beforeEach(function() {
-    this.space = new Space({ initialState: 'here', count: 1, child: {} });
+    this.space = new Space({
+      initialState: 'here',
+      count: 1,
+      child: {}
+    });
   });
 
   it('returns Space instance', function() {
@@ -275,6 +279,38 @@ describe('Space', function() {
         });
         this.subSpaceByName.setState(() => ({ updated: 'happened' }))();
         assert.equal(timesCalled, 2);
+      });
+    });
+  });
+
+  describe('space with an array as state', function() {
+    beforeEach(function() {
+      this.initialState = ['item', { val: true }];
+      this.spaceList = new Space(this.initialState);
+    });
+
+    it('returns correct state', function() {
+      assert.deepEqual(this.spaceList.state, this.initialState);
+      assert(Array.isArray(this.spaceList.state));
+    });
+
+    it('can be updated', function() {
+      this.spaceList.setState(this.spaceList.state.concat('end'));
+      assert.deepEqual(this.spaceList.state, ['item', { val: true }, 'end']);
+      this.spaceList.setState(this.spaceList.state.slice(0,1));
+      assert.deepEqual(this.spaceList.state, ['item']);
+    });
+
+    describe('is a child', function() {
+      beforeEach(function() {
+        this.space.setState({
+          subList: [1,2,3]
+        });
+      });
+
+      it('state is expected array', function() {
+        const state = this.space.subSpace('subList').state;
+        assert.deepEqual(state, [1,2,3]);
       });
     });
   });
