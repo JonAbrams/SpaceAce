@@ -192,6 +192,14 @@ describe('Space', function() {
       );
     });
 
+    it('old copy of state renders attached grandchild spaces correctly', function() {
+      const space = new Space({ child: { grandChild: { val: true }}});
+      const oldState = space.state;
+      assert.deepEqual(oldState.child.grandChild, { val: true });
+      space.subSpace('child').subSpace('grandChild');
+      assert.deepEqual(oldState.child.grandChild, { val: true });
+    });
+
     describe('child spaces in lists', function() {
       beforeEach(function() {
         this.space.setState(({ subSpace }) => ({
