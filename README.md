@@ -42,7 +42,7 @@ import Space from 'spaceace';
 import Container from './Container';
 
 // Create the root "space" along with its initial state
-const rootSpace = new Space({ name: 'Jon', todoList: { todos: [] } });
+const rootSpace = new Space({ name: 'Jon', todos: [] });
 rootSpace.subscribe(causedBy => {
   // Example `causedBy`s:
   // 'todoList#addTodo', 'todos[akd4a1plj]#toggleDone'
@@ -64,8 +64,8 @@ export default function Container({ space }) {
     <div>
       <h1>Welcome {state.name}</h1>
       <TodoList
-        // Create/Get child space that uses/takes over `state.todoList`
-        space={space.subSpace('todoList')}
+        // Create/Get child space that uses/takes over `state.todos`
+        space={space.subSpace('todos')}
         name={state.name}
       />
     </div>
@@ -79,33 +79,31 @@ import uuid from 'uuid/v4';
 import Todo from 'Todo';
 
 export default function TodoList({ space, name }) {
-  const { todos } = space.state;
+  const todos = space.state;
 
   return(
     <h2>{name}'s Todos:</h2>
     <button onClick={space.setState(addTodo)}>Add Todo</button>
     <ul className='todos'>
       {todos.map(todo =>
-        <Todo space={space.subSpace('todos', todo.id)} />
+        <Todo space={space.subSpace(todo.id)} />
       )}
     </ul>
   );
 };
 
 // setState callbacks are given the space first, then the event, if it exists.
-// The object that is returned is merged with the space's state
-// In this case the `todos` attribute is overwritten
+// If the space is an array, the result overwrites the existing state
 function addTodo({ space }, e) {
-  const { todos } = space.state;
+  const todos = space.state;
 
   e.preventDefault();
 
-  return {
-    todos: [
-      // subSpace(…) creates a space for the todo, with an initial state
-      // All spaces that exist in a list, like this one, need a unique 'id'
-      // uuid() is used to generate a unique 'id'
-      space.subSpace({ id: uuid(), msg: 'A new TODO', done: false })
+  return [
+      // All items that exist in a list, like this one, need a unique 'id'
+      // for when they are later accessed as a subSpace
+      // uuid() is used here to generate a unique 'id'
+      { id: uuid(), msg: 'A new TODO', done: false }
      ].concat(todos)
    };
  }
@@ -117,7 +115,7 @@ function addTodo({ space }, e) {
 import react from 'react';
 
 export default function Todo({ space }) {
-  const todo = space.state; // The entire state is the todo
+  const todo = space.state; // The entire state from this space is the todo
   const { setState } = space;
   const doneClassName = todo.done ? 'done' : '';
 
@@ -136,12 +134,12 @@ function toggleDone({ state: todo }, e) {
   return { done: !todo.done };
 }
 
+// Returning null to setState causes the space to be removed from its parent
+// In this case, this causes this todo to be removed from the
+// parent space's state
 function removeTodo(todoSpace, e) {
   e.preventDefault();
 
-  // Returning null to setState causes this space to be removed from its parent
-  // In this case, this causes this todo to be removed from the parent's list
-  // of todos
   return null;
 }
 ```

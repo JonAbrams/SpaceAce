@@ -202,12 +202,29 @@ describe('Space', function() {
 
     describe('child spaces in lists', function() {
       beforeEach(function() {
-        this.space.setState(({ subSpace }) => ({
+        this.space.setState({
           list: [
-            subSpace({ value: 'present', id: 'abc12-3' }),
+            this.space.subSpace({ value: 'present', id: 'abc12-3' }),
             { notSubSpace: true, id: '1234' }
           ]
-        }))();
+        });
+      });
+
+      describe('list spaces', function() {
+        beforeEach(function() {
+          this.listSpace = new Space([{ id: 123, val: 'abc' }]);
+        });
+
+        it('can get child subSpaces', function() {
+          assert(this.listSpace.subSpace('123') instanceof Space);
+          assert.equal(this.listSpace.subSpace('123').state.val, 'abc');
+        });
+
+        it('throws when id not found', function() {
+          assert.throws(() => this.listSpace.subSpace('321'),
+            /Could not find item with id 321 in root\.root/
+          );
+        });
       });
 
       it('supports subSpaces in lists', function() {
@@ -226,6 +243,12 @@ describe('Space', function() {
       it('can get spaces from list', function() {
         const listItemSpace = this.space.subSpace('list', 'abc12-3');
         assert.equal(listItemSpace.state.value, 'present');
+      });
+
+      it('throws when id not found', function() {
+        assert.throws(() => this.space.subSpace('list', '321'),
+          /Could not find item with id 321 in root.list/
+        );
       });
 
       it('can turn non-spaces into spaces from list', function() {
