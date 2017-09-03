@@ -6,7 +6,8 @@ describe('Space', function() {
     this.space = new Space({
       initialState: 'here',
       count: 1,
-      child: {}
+      child: {},
+      nullItem: null
     });
   });
 
@@ -34,13 +35,23 @@ describe('Space', function() {
   });
 
   it('has initial state', function() {
-    assert.deepEqual(this.space.state, { initialState: 'here', count: 1, child: {} });
+    assert.deepEqual(this.space.state, {
+      initialState: 'here',
+      count: 1,
+      child: {},
+      nullItem: null
+    });
   });
 
   it('updates the state', function() {
     const oldState = this.space.state;
     this.space.setState(({ state }) => ({ count: state.count + 1 }))();
-    assert.deepEqual(this.space.state, { initialState: 'here', count: 2, child: {} });
+    assert.deepEqual(this.space.state, {
+      initialState: 'here',
+      count: 2,
+      child: {},
+      nullItem: null
+    });
     assert.notEqual(this.space.state, oldState);
   });
 
@@ -232,10 +243,11 @@ describe('Space', function() {
           initialState: 'here',
           count: 1,
           child: {},
+          nullItem: null,
           actionChild: { value: 'present' },
           list: [
             {value: 'present', id: 'abc12-3' },
-            { notSubSpace: true, id: 1234 }
+            { notSubSpace: true, id: '1234' }
           ]
         });
       });
