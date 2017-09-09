@@ -102,7 +102,7 @@ function addTodo({ space }, e) {
   return [
       // All items that exist in a list, like this one, need a unique 'id'
       // for when they are later accessed as a subSpace
-      // uuid() is used here to generate a unique 'id'
+      // uuid() is a handy module for generating a unique 'id'
       { id: uuid(), msg: 'A new TODO', done: false }
      ].concat(todos)
    };
@@ -154,7 +154,8 @@ Every `space` consists of:
 - `state`: An immutable state, which can only be overwritten using an action.
 - `subscribe`: A method for subscribing to updates.
 - `setState`: A method for changing a space's state. Accepts an object or function.
-- `subSpace`: A method for spawning or attaching child spaces.
+- `subSpace`: A method for spawning child spaces.
+- `parentSpace`: A method for getting a parent space with a specified name.
 
 You create a new space by calling `new Space(…)` e.g.
 ```javascript
@@ -239,10 +240,18 @@ One of the main feature of SpaceAce is the ability to break up a store into indi
 
 When a child space's state is updated, it notifies its parent space, which in turn updates its state (which includes the child's state), and so on.
 
+### parentSpace
+
+Example: `space.parentSpace('root')` or `space.parentSpace('todos')`
+
+Ideally, you shouldn't need to access a parent space, but if you do, this will return the space
+with the specified name. It searches up the state tree until it finds the space with the
+specified name. The root space is given the default name `'root'`. If no matching space
+is found, `null` is returned.
+
 #### Spawning Children
 
-Calling `subSpace` with a string as the only parameter will turn that attribute
-of a space into a child space.
+Calling `subSpace` with a string will turn that attribute of a space into a child space.
 
 e.g. Given a space called `userSpace` with this state:
 ```javascript
@@ -260,29 +269,39 @@ You can convert the `settings` into a child space with `userSpace.subSpace('sett
 Note that even though `settings` is now a space, the state of `userSpace` hasn't changed.
 At least not until the `settings` space is updated with a change.
 
-#### Attaching Children
+## FAQ
 
-If there isn't an existing part of a space's state that can be converted, you can
-create a new space (with an initial state) and attach it to its parent's state.
-This is very useful when you create spaces that go into a list.
+**What's the difference between a state and a space?**
 
-e.g. Given a `userSpace` with this state:
-```javascript
-{
-  name: 'Jon',
-  comments: []
-}
-```
+Think of state as an object with a bunch of values. A space contains that state, but
+provides a few handy methods meant to interact with it. So if you're in a component
+that doesn't need to change the state's contents, nor does it need to spawn subspaces,
+then you don't need to give it a space, you can just give it the state.
 
-You can add new comment _spaces_ to the parent space with the following setState call:
-```jsx
-userSpace.setState({
-  comments: userSpace.state.comments.concat(userSpace.subSpace({
-    message: 'This is a new comment',
-    id: uuid()
-  })
-});
-```
+**How do I add middleware like in Redux?**
+
+Hopefully that feature will come in v2!
+
+**Are spaces immutable?**
+
+Sort of. The state you get from a space is an immutable object. You cannot change it
+directly, if you do so you may get an error (if 'use strict' is enabled). But… you can
+change it using the `setState` function provided by the state's space.
+
+**Why do list items need an `id` key?**
+
+Due to the fact that the state is immutable, if a sub-space for an item wants to update
+its state, Space Ace needs to find it in the parent space's state. The way we've
+solved this is to use a unique id field.
+
+**Why do I need to specify a name to get a parent space?**
+
+One of the goals of Space Ace is to keep components as modular/reusable as possible.
+The use of `parentSpace` risks that by requiring a component to have a known parent
+component. By requiring a name to be specified, it encourages you to consider the
+relationship and interaction contract between the components. But perhaps more importantly,
+it also allows you to move the component around your app's structure and not have
+it break in an odd way.
 
 ## Live Example
 
