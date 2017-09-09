@@ -130,7 +130,7 @@ describe('Space', function() {
     beforeEach(function() {
       this.subSpaceByName = this.space.subSpace('child');
       this.space.setState(({ subSpace }) => ({
-        actionChild: subSpace({ value: 'present' })
+        actionChild: { value: 'present' }
       }))();
     });
 
@@ -146,11 +146,6 @@ describe('Space', function() {
     it('gives empty state by default', function() {
       assert.deepEqual(this.space.subSpace('emptyChild').preState, {});
       assert.deepEqual(this.space.subSpace('emptyChild').state, {});
-    });
-
-    it('supports adding subspaces by action', function() {
-      assert(this.space.preState.actionChild instanceof Space);
-      assert.equal(this.space.state.actionChild.value, 'present');
     });
 
     it('removes spaces by returning null for that space', function() {
@@ -215,8 +210,8 @@ describe('Space', function() {
       beforeEach(function() {
         this.space.setState({
           list: [
-            this.space.subSpace({ value: 'present', id: 'abc12-3' }),
-            { notSubSpace: true, id: '1234' }
+            { value: 'present', id: 'abc12-3' },
+            { value: 'another', id: '1234' }
           ]
         });
       });
@@ -233,7 +228,7 @@ describe('Space', function() {
 
         it('throws when id not found', function() {
           assert.throws(() => this.listSpace.subSpace('321'),
-            /Could not find item with id 321 in root\.root/
+            /Could not find item with id 321 in root/
           );
         });
       });
@@ -246,55 +241,43 @@ describe('Space', function() {
           nullItem: null,
           actionChild: { value: 'present' },
           list: [
-            {value: 'present', id: 'abc12-3' },
-            { notSubSpace: true, id: '1234' }
+            { value: 'present', id: 'abc12-3' },
+            { value: 'another', id: 1234 }
           ]
         });
       });
 
       it('can get spaces from list', function() {
-        const listItemSpace = this.space.subSpace('list', 'abc12-3');
+        const listItemSpace = this.space.subSpace('list').subSpace('abc12-3');
         assert.equal(listItemSpace.state.value, 'present');
       });
 
       it('throws when id not found', function() {
-        assert.throws(() => this.space.subSpace('list', '321'),
-          /Could not find item with id 321 in root.list/
+        assert.throws(() => this.space.subSpace('list').subSpace('321'),
+          /Could not find item with id 321 in list/
         );
       });
 
-      it('can turn non-spaces into spaces from list', function() {
-        const listItemSpace = this.space.subSpace('list', '1234');
-        assert(listItemSpace.state.notSubSpace);
-        assert.equal(listItemSpace.nextParent, this.space);
-      });
-
-      it('can respawn list spaces', function() {
-        let listItemSpace = this.space.subSpace('list', '1234');
-        listItemSpace = this.space.subSpace('list', '1234');
-        assert(listItemSpace.state.notSubSpace);
-      });
-
       it('removes spaces when null is returned from action', function() {
-        const listItemSpace = this.space.subSpace('list', 'abc12-3');
+        const listItemSpace = this.space.subSpace('list').subSpace('abc12-3');
         assert.equal(this.space.state.list.length, 2);
         listItemSpace.setState(() => null)();
         assert.equal(this.space.state.list.length, 1);
       });
 
       it('provides a key prop', function() {
-        assert('key' in this.space.subSpace('list', 'abc12-3'));
-        assert.equal(this.space.subSpace('list', 'abc12-3').key, 'abc12-3');
+        assert('key' in this.space.subSpace('list').subSpace('abc12-3'));
+        assert.equal(this.space.subSpace('list').subSpace('abc12-3').key, 'abc12-3');
       });
 
       it('key prop changes when ID changes', function() {
-        const itemSpace = this.space.subSpace('list', 'abc12-3');
+        const itemSpace = this.space.subSpace('list').subSpace('abc12-3');
         itemSpace.setState({ id: 'abc' });
-        assert.equal(this.space.subSpace('list', 'abc').key, 'abc');
+        assert.equal(this.space.subSpace('list').subSpace('abc').key, 'abc');
       });
 
       it('sets causedBy', function() {
-        const itemSpace = this.space.subSpace('list', 'abc12-3');
+        const itemSpace = this.space.subSpace('list').subSpace('abc12-3');
         this.space.subscribe(causedBy => {
           if (causedBy === 'initialized') return;
           assert.equal(causedBy, 'list[abc12-3]#myAction');
