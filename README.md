@@ -303,12 +303,6 @@ relationship and interaction contract between the components. But perhaps more i
 it also allows you to move the component around your app's structure and not have
 it break in an odd way.
 
-## Live Example
-
-Here's a quick and dirty example app that uses SpaceAce that you can play around with online:
-
-https://codesandbox.io/s/KKPoM83G
-
 ## License
 
 MIT
