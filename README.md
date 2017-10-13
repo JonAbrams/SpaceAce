@@ -225,6 +225,7 @@ One of the main feature of SpaceAce is the ability to break up a store into indi
 
 When a child space's state is updated, it notifies its parent space, which causes it to update its state (which includes the child's state) and notifies its subscribers, and then notifies its parent space, and so on.
 
+
 ### subscribe
 
 Registers a callback function to be called whenever the space's state is updated.
@@ -280,9 +281,8 @@ At least not until the `settings` space is updated with a change.
 **What's the difference between a state and a space?**
 
 Think of state as an object with a bunch of values. A space contains that state, but
-provides a few handy methods meant to interact with it. So if you're in a component
-that doesn't need to change the state's contents, nor does it need to spawn subspaces,
-then you don't need to give it a space, you can just give it the state.
+provides a few handy methods meant for interacting with it. So if you're in a component
+that just needs to read from the state, then you don't need to give it a space, you can just give it the state. If that component needs to also update the state or spawn sub-spaces, then pass it the space.
 
 **How do I add middleware like in Redux?**
 
@@ -291,14 +291,14 @@ Hopefully that feature will come in v2!
 **Are spaces immutable?**
 
 Sort of. The state you get from a space is an immutable object. You cannot change it
-directly, if you do so you may get an error (if 'use strict' is enabled). But… you can
-change it using the `setState` function provided by the state's space.
+directly, if you do so you may get an error. But… you can
+mutate the state by using the `setState` function provided by the state's space.
 
 **Why do list items need an `id` key?**
 
 Due to the fact that the state is immutable, if a sub-space for an item wants to update
 its state, SpaceAce needs to find it in the parent space's state. The way we've
-solved this is to use a unique id field.
+solved this is to use a unique id field. It's a similar concept to React's built-in `key` prop. In fact, every space in an array that has an `id` is automatically given an identical `key` field for convenience.
 
 **Why do I need to specify a name to get a parent space?**
 
