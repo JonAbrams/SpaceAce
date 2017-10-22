@@ -20,7 +20,7 @@ It's become standard practice in front-end JavaScript to have views that receive
 
 This concept, referred to as _Flux_ has many advantages:
 
-- It's much easier to reason through the changes your application experiences.
+- Centralizes your data, making it easier to manage.
 - You can easily log changes.
 - You can replay/undo state changes.
 - Has great libraries such as _Redux_ that implement it.
