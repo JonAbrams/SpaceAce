@@ -45,6 +45,10 @@ describe('Space', function() {
     });
   });
 
+  it('does not regenerate state on each get', function() {
+    assert.equal(this.space.state, this.space.state);
+  });
+
   it('updates the state', function() {
     const oldState = this.space.state;
     this.space.setState(({ state }) => ({ count: state.count + 1 }))();
@@ -135,13 +139,13 @@ describe('Space', function() {
   describe('child spaces', function() {
     beforeEach(function() {
       this.subSpaceByName = this.space.subSpace('child');
-      this.space.setState(({ subSpace }) => ({
+      this.space.setState({
         actionChild: { value: 'present' },
-      }))();
+      });
     });
 
     it('propagates changes upwards', function() {
-      this.subSpaceByName.setState(() => ({ value: 'is there' }))();
+      this.subSpaceByName.setState({ value: 'is there' });
       assert.equal(this.space.state.child.value, 'is there');
     });
 
@@ -176,11 +180,11 @@ describe('Space', function() {
     });
 
     it('can update siblings', function() {
-      this.subSpaceByName.parentSpace('root').setState(() => ({
+      this.subSpaceByName.parentSpace('root').setState({
         actionChild: {
           addedValue: 'present',
         },
-      }))();
+      });
       assert.equal(
         this.space.subSpace('actionChild').state.addedValue,
         'present'
@@ -188,26 +192,38 @@ describe('Space', function() {
     });
 
     it('can update nephews', function() {
+      const deepSpace = this.space
+        .subSpace('actionChild')
+        .subSpace('actionChildChild');
+
       this.space
         .subSpace('actionChild')
         .subSpace('actionChildChild')
-        .setState(() => ({
+        .setState({
           value: 'starting',
-        }))();
-      this.subSpaceByName.parentSpace('root').setState(() => ({
+        });
+
+      let subscriberCalled = 0;
+      this.space.subscribe(causedBy => {
+        if (causedBy === 'initialized') return;
+        assert.equal(causedBy, 'root#unknown');
+        subscriberCalled += 1;
+      });
+
+      this.subSpaceByName.parentSpace('root').setState({
         actionChild: {
           actionChildChild: {
             addedValue: 'present',
           },
         },
-      }))();
-      assert.deepEqual(
-        this.space.subSpace('actionChild').subSpace('actionChildChild').state,
-        {
-          addedValue: 'present',
-          value: 'starting',
-        }
-      );
+      });
+
+      assert.equal(subscriberCalled, 1);
+
+      assert.deepEqual(deepSpace.state, {
+        addedValue: 'present',
+        value: 'starting',
+      });
     });
 
     it('old copy of state renders attached grandchild spaces correctly', function() {

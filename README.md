@@ -221,9 +221,27 @@ class SignupModal extends React.Component {
 
 ### subSpace
 
+Parameters:
+ - String (the name of the key to spawn from)
+
+ Returns:
+  - A new space linked to the current space.
+
 One of the main feature of SpaceAce is the ability to break up a store into individual sub-stores, or spaces. Any space, whether it's a root or a child, can have child spaces.
 
+Use `subSpace` to take part of the current space's state and return a child space based on it.
+
 When a child space's state is updated, it notifies its parent space, which causes it to update its state (which includes the child's state) and notifies its subscribers, and then notifies its parent space, and so on.
+
+```jsx
+function TodoApp({ space }) {
+  return (<div>
+    {space.subSpace('todos').map(todo =>
+      <Todo {space.subSpace('todos').subSpace(todo.id)} />
+    )}
+  </div>);
+}
+```
 
 
 ### subscribe
