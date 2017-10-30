@@ -155,69 +155,23 @@ function removeTodo(todoSpace, e) {
 
 `Space` is the default class provided by the `spaceace` npm package.
 
-Every `space` consists of:
+Every instance of `Space` consists of:
 - `state`: An immutable state, which can only be overwritten using an action.
-- `setState`: A method for changing a space's state. Accepts an object or function.
-- `subSpace`: A method for spawning child spaces.
-- `subscribe`: A method for subscribing to updates.
-- `parentSpace`: A method for getting a parent space with a specified name.
+- `subSpace(subSpaceName: String) -> Space`: Spawns a child space.
+- `bindTo(eventHandler: Function) -> Function`: Wraps an event handler, passing in the space when eventually called. If object returned by eventHandler, it is shallow merged onto state.
+- `setState(mergeObject: Object, [changedBy: String])`: A method for changing a space's state using a shallow merge.
+- `subscribe(subscriber: Function)`: Adds a callback for when the state changes.
+- `parentSpace(name: String)`: Gets an ancestor space with the specified name.
 
 You create a new space by calling `new Space(…)` e.g.
 ```javascript
-const rootSpace = new Space({ initialState: true, todoList: { todos: [] } });
+const rootSpace = new Space({ initialState: true, todos: [] });
 ```
 
 ### state
 
-`state` is a getter method on every space. It generates a frozen/immutable object
-that can be used to render a view. It includes the state of any child spaces as well. Do not try to change it directly.
-
-
-### setState
-
-Parameters:
-  - Object (for merging onto state) or a function (as a callback)
-  - (optional) String – Used as a name for logging
-
-Given an object, `setState` merges it into the space's state. Pass in a second parameter
-to give the update a name, for logging purposes.
-
-Given a function, `setState` wraps it and _returns a function_. This new function can then be used as an event handler.
-
-The provided callback function is called with the space as the first parameter. This saves you from needing to bind `this` to your event handlers.
-
-If `null` is returned from a space that is a list item, then the space is removed
-from the list it is in.
-
-The event is passed in as the second parameter to the callback, useful for calling `event.preventDefault()`, or for reading `event.target.value`.
-
-e.g. Given the following React component:
-```jsx
-class SignupModal extends React.Component {
-  closeModal(space, event) {
-    event.preventDefault();
-    return { isOpen: false };
-  }
-
-  toggleMinify({ state }, event) {
-    event.preventDefault();
-    return { isMinified: !state.isMinified };
-  }
-
-  render() {
-    const { state, setState, subSpace } = this.props;
-    return (
-      <Modal isOpen={state.isOpen}>
-        <SignupForm {...subSpace('signupForm')} />
-        <a href='#' onClick={setState(this.closeModal)}>&times;</a>
-        <a href='#' onClick={setState(this.toggleMinify)}>
-          {state.isMinified ? 'Expand' : 'Shrink'}
-        </a>
-      </Modal>
-    )
-  }
-}
-```
+`state` is a getter method on every space. It returns a frozen/immutable object
+that can be used to render a view. It includes the state of any child spaces as well. Do not change it directly.
 
 ### subSpace
 
@@ -225,7 +179,7 @@ Parameters:
  - String (the name of the key to spawn from)
 
  Returns:
-  - A new space linked to the current space.
+  - A new space linked to the current space
 
 One of the main feature of SpaceAce is the ability to break up a store into individual sub-stores, or spaces. Any space, whether it's a root or a child, can have child spaces.
 
@@ -233,16 +187,137 @@ Use `subSpace` to take part of the current space's state and return a child spac
 
 When a child space's state is updated, it notifies its parent space, which causes it to update its state (which includes the child's state) and notifies its subscribers, and then notifies its parent space, and so on.
 
+`subSpace` is usually called in your component's render for convenience. It's safe to do so because it does not alter state when called.
+
+e.g.
 ```jsx
-function TodoApp({ space }) {
-  return (<div>
-    {space.subSpace('todos').map(todo =>
-      <Todo {space.subSpace('todos').subSpace(todo.id)} />
+const TodoApp = ({ rootSpace }) => (
+  <div>
+    {rootSpace.subSpace('todos').state.map(todo =>
+      <Todo {...rootSpace.subSpace('todos').subSpace(todo.id)} />
     )}
-  </div>);
+  </div>
+);
+```
+
+or more properly:
+```jsx
+const TodoApp = ({ space }) => (
+  <div>
+    <TodoList space={space.subSpace('todos')} />
+  </div>
+);
+
+const TodoList = ({ space: { state: todos, subSpace } }) => (
+ <ul>
+    {todos.map(todo => (
+      <Todo space={subSpace(todo.id)} key={todo.id} />
+    ))}
+  </ul>);
+);
+```
+
+### bindTo
+
+Parameters:
+  - Function (callback)
+
+Returns:
+ - Function (the callback bounded to the space)
+
+Wraps the given callback function and returns a new function. When the returned function is called, it calls the callback, but with the space passed in as the first parameter.
+
+This new function can then be used as an event handler.
+
+The event is passed in as the second parameter to the callback, useful for calling `event.preventDefault()`, or for reading `event.target.value`.
+
+If value returned by your callback will be merged onto the space's state. If the space's state is an array, the returned value will overwrite the state instead.
+
+If the space is an item in a list, then returning `null` will remove it from the list.
+
+e.g.
+```jsx
+const changeTodo = (space, event) => ({
+  content: event.target.value
+});
+
+const toggleDone = ({ state: todo }) => ({
+  done: !todo.done
+});
+
+const removeTodo = () => null;
+
+export default Todo = ({ state: todo, bind }) => (
+  <div>
+    <input type="text" value={state.content} onChange={bindTo(changeTodo)} />
+    <button onClick={bindTo(toggleDone)}>
+      {todo.done ? 'Restore' : 'Done'}
+    </button>
+    <button onClick={bindTo(removeTodo)}>
+      Remove
+    </button>
+  </div>
+);
+```
+
+### setState
+
+Parameters:
+  - Object (for merging onto state)
+  - (optional) String – Used as a name for logging
+
+Shallow merges the given object it into the space's state. Pass in a second parameter to give the update a name for the `causedBy` passed to subscribers.
+
+If the space's state is an array, setState will throw an error. Use `replaceState` instead.
+
+Often used to apply async data to a state. Use `bindTo` to apply changes caused by the user.
+
+e.g.
+```jsx
+class TodoApp extends React.Component {
+  async componentDidMount() {
+    const { space } = this.props;
+    const fetchResult = await fetch('/api/todos').then(res => res.json());
+
+    space.setState({
+      todos: fetchResult.todos
+    }, 'todosFetch');
+  }
+
+  render() {
+    …
+  }
 }
 ```
 
+### replaceState
+
+Parameter:
+ - Object or array
+ - (optional) String – Used as a name for logging
+
+Replaces the space's state with the object or array provided. Pass in a second parameter to give the update a name for the `causedBy` passed to subscribers.
+
+Should be used for altering an array, or for replaying state.
+
+e.g.
+```jsx
+const addTodo = ({ state: todos, replaceState }) => {
+  replaceState([...todos, {
+    content: 'A brand new todo',
+    done: false
+  }]);
+};
+
+const TodoList = ({ state: todos, subSpace, bind }) => (
+  <ul>
+    {todos.map(todo => (
+      <Todo {...subSpace(todo.id)} />
+    ))}
+    <button onClick={bindTo(addTodo)}>Add Todo</button>
+  </ul>
+);
+```
 
 ### subscribe
 
@@ -291,8 +366,7 @@ e.g. Given a space called `userSpace` with this state:
 
 You can convert the `settings` into a child space with `userSpace.subSpace('settings')`.
 
-Note that even though `settings` is now a space, the state of `userSpace` hasn't changed.
-At least not until the `settings` space is updated with a change.
+Note that even though `settings` is now a space, the state of `userSpace` hasn't changed. At least not until the `settings` space is updated with a change.
 
 ## FAQ
 
@@ -308,24 +382,15 @@ Hopefully that feature will come in v2!
 
 **Are spaces immutable?**
 
-Sort of. The state you get from a space is an immutable object. You cannot change it
-directly, if you do so you may get an error. But… you can
-mutate the state by using the `setState` function provided by the state's space.
+Sort of. The state you get from a space is an immutable object. You cannot change it directly, if you do so you may get an error. But… you can mutate the state by using the `bindTo`, `setState`, and `replaceState` functions provided by the state's space.
 
 **Why do list items need an `id` key?**
 
-Due to the fact that the state is immutable, if a sub-space for an item wants to update
-its state, SpaceAce needs to find it in the parent space's state. The way we've
-solved this is to use a unique id field. It's a similar concept to React's built-in `key` prop. In fact, every space in an array that has an `id` is automatically given an identical `key` field for convenience.
+Due to the fact that the state is immutable, if a sub-space for an item wants to update its state, SpaceAce needs to find it in the parent space's state. The way we've solved this is to use a unique id field. It's a similar concept to React's built-in `key` prop. In fact, every space in an array that has an `id` is automatically given an identical `key` field for convenience.
 
 **Why do I need to specify a name to get a parent space?**
 
-One of the goals of SpaceAce is to keep components as modular/reusable as possible.
-The use of `parentSpace` risks that by requiring a component to have a known parent
-component. By requiring a name to be specified, it encourages you to consider the
-relationship and interaction contract between the components. But perhaps more importantly,
-it also allows you to move the component around your app's structure and not have
-it break in an odd way.
+One of the goals of SpaceAce is to keep components as modular/reusable as possible. The use of `parentSpace` risks that by requiring a component to have a known parent component. By requiring a name to be specified, it encourages you to consider the relationship and interaction contract between the components. But perhaps more importantly, it also allows you to move the component around your app's structure and not have it break in an odd way.
 
 ## License
 
