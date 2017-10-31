@@ -130,7 +130,7 @@ describe('Space', function() {
       assert.equal(this.space.subscribers[0], this.subscriber);
     });
 
-    it('calls subscribers when state is changed via bind', function() {
+    it('calls subscribers when state is changed via bindTo', function() {
       assert(!this.subscriberCalled);
       this.space.subscribe(causedBy => {
         if (causedBy === 'initialized') return;
@@ -157,6 +157,15 @@ describe('Space', function() {
       this.space.bindTo(function myAction() {
         return { val: 'is set' };
       })();
+    });
+
+    it('unsubscribes', function() {
+      const unsubscribe = this.space.subscribe(causedBy => {
+        if (causedBy === 'initialized') return;
+        throw new Error('This should not be called!');
+      });
+      unsubscribe();
+      this.space.setState({ changed: true });
     });
   });
 
