@@ -62,9 +62,9 @@ describe('Space', function() {
         if (causedBy === 'initialized') return;
         assert.equal(causedBy, 'root#unknown');
       });
-      this.space.setState({ count: 42 });
+      this.space.setState({ count: 42, initialState: null });
       assert.deepEqual(this.space.state, {
-        initialState: 'here',
+        initialState: null,
         count: 42,
         nullItem: null,
         child: {},
