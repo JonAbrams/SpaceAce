@@ -85,6 +85,12 @@ describe('Space', function() {
         val: true,
       });
     });
+
+    it('throws when given a function', function() {
+      assert.throws(() => {
+        this.space.setState(() => {});
+      });
+    });
   });
 
   describe('#bindTo', function() {
