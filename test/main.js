@@ -121,14 +121,17 @@ describe('Space', function() {
       assert.equal(this.space.state, oldState);
     });
 
-    it('supports promise returns', async function() {
-      await this.space.bindTo(() => Promise.resolve({ newItem: 'is new' }))();
-      assert.deepEqual(this.space.state, {
-        initialState: 'here',
-        count: 1,
-        child: {},
-        nullItem: null,
-        newItem: 'is new',
+    it('supports promise returns', function() {
+      return this.space.bindTo(() =>
+        Promise.resolve({ newItem: 'is new' })
+      )().then(() => {
+        assert.deepEqual(this.space.state, {
+          initialState: 'here',
+          count: 1,
+          child: {},
+          nullItem: null,
+          newItem: 'is new',
+        });
       });
     });
   });
