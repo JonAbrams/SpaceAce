@@ -181,13 +181,13 @@ Parameters:
  Returns:
   - A new space linked to the current space
 
-One of the main feature of SpaceAce is the ability to break up a store into individual sub-stores, or spaces. Any space, whether it's a root or a child, can have child spaces.
-
 Use `subSpace` to take part of the current space's state and return a child space based on it.
 
 When a child space's state is updated, it notifies its parent space, which causes it to update its state (which includes the child's state) and notifies its subscribers, and then notifies its parent space, and so on.
 
 `subSpace` is usually called in your component's render for convenience. It's safe to do so because it does not alter state when called.
+
+`subSpace` requires there to be an existing object or array to spawn from. An error will be thrown otherwise.
 
 e.g.
 ```jsx

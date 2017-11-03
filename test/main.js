@@ -193,7 +193,7 @@ describe('Space', function() {
     beforeEach(function() {
       this.subSpaceByName = this.space.subSpace('child');
       this.space.setState({
-        actionChild: { value: 'present' },
+        otherChild: { value: 'present' },
       });
     });
 
@@ -206,9 +206,24 @@ describe('Space', function() {
       assert.equal(this.space.subSpace('child'), this.subSpaceByName);
     });
 
-    it('gives empty state by default', function() {
-      assert.deepEqual(this.space.subSpace('emptyChild').preState, {});
-      assert.deepEqual(this.space.subSpace('emptyChild').state, {});
+    it('does not touch child state if child is unaffected', function() {
+      const oldState = this.subSpaceByName.state;
+      // Parent changed
+      this.space.setState({ change: true });
+      assert.equal(oldState, this.subSpaceByName.state);
+      // Sibling changed
+      this.space.subSpace('otherChild').setState({ value: null });
+      assert.equal(oldState, this.subSpaceByName.state);
+      // Self changed
+      this.space.setState({ child: { changed: true } });
+      assert.notEqual(oldState, this.subSpaceByName.state);
+    });
+
+    it('subSpacing throws when cannot find attribute', function() {
+      assert.throws(
+        () => this.space.subSpace('missingChild'),
+        /Cannot attach sub-space to missingChild with type undefined/
+      );
     });
 
     it('throws list subSpaces missing id', function() {
@@ -220,6 +235,7 @@ describe('Space', function() {
     });
 
     it('can fetch root space', function() {
+      this.subSpaceByName.setState({ gc: {} });
       const grandChild = this.subSpaceByName.subSpace('gc');
       assert.equal(this.subSpaceByName.rootSpace, this.space);
       assert.equal(grandChild.rootSpace, this.space);
@@ -227,24 +243,25 @@ describe('Space', function() {
 
     it('can update siblings', function() {
       this.subSpaceByName.rootSpace.setState({
-        actionChild: {
+        otherChild: {
           addedValue: 'present',
         },
       });
       assert.equal(
-        this.space.subSpace('actionChild').state.addedValue,
+        this.space.subSpace('otherChild').state.addedValue,
         'present'
       );
     });
 
     it('can update nephews', function() {
+      this.space.subSpace('otherChild').setState({ otherChildChild: {} });
       const deepSpace = this.space
-        .subSpace('actionChild')
-        .subSpace('actionChildChild');
+        .subSpace('otherChild')
+        .subSpace('otherChildChild');
 
       this.space
-        .subSpace('actionChild')
-        .subSpace('actionChildChild')
+        .subSpace('otherChild')
+        .subSpace('otherChildChild')
         .setState({
           value: 'starting',
         });
@@ -257,8 +274,8 @@ describe('Space', function() {
       });
 
       this.subSpaceByName.rootSpace.setState({
-        actionChild: {
-          actionChildChild: {
+        otherChild: {
+          otherChildChild: {
             addedValue: 'present',
           },
         },
@@ -314,7 +331,7 @@ describe('Space', function() {
           count: 1,
           child: {},
           nullItem: null,
-          actionChild: { value: 'present' },
+          otherChild: { value: 'present' },
           list: [
             { value: 'present', id: 'abc12-3' },
             { value: 'another', id: 1234 },
