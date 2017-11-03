@@ -32,11 +32,11 @@ describe('Space', function() {
   it('spaces only have these enumerated keys', function() {
     const publicMethods = [
       'state',
+      'rootSpace',
       'setState',
       'subSpace',
       'bindTo',
       'replaceState',
-      'parentSpace',
     ];
     const childSpace = this.space.subSpace('child');
     assert.deepEqual(Object.keys(this.space), publicMethods);
@@ -205,15 +205,14 @@ describe('Space', function() {
       });
     });
 
-    it('can reference parent spaces by name', function() {
+    it('can fetch root space', function() {
       const grandChild = this.subSpaceByName.subSpace('gc');
-      assert.equal(this.subSpaceByName.parentSpace('root'), this.space);
-      assert.equal(grandChild.parentSpace('root'), this.space);
-      assert.equal(grandChild.parentSpace('child'), this.subSpaceByName);
+      assert.equal(this.subSpaceByName.rootSpace, this.space);
+      assert.equal(grandChild.rootSpace, this.space);
     });
 
     it('can update siblings', function() {
-      this.subSpaceByName.parentSpace('root').setState({
+      this.subSpaceByName.rootSpace.setState({
         actionChild: {
           addedValue: 'present',
         },
@@ -243,7 +242,7 @@ describe('Space', function() {
         subscriberCalled += 1;
       });
 
-      this.subSpaceByName.parentSpace('root').setState({
+      this.subSpaceByName.rootSpace.setState({
         actionChild: {
           actionChildChild: {
             addedValue: 'present',

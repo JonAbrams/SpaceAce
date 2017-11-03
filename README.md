@@ -156,12 +156,12 @@ function removeTodo(todoSpace, e) {
 `Space` is the default class provided by the `spaceace` npm package.
 
 Every instance of `Space` consists of:
-- `state`: An immutable state, which can only be overwritten using an action.
+- `state -> Object`: An immutable state, which can only be overwritten using an action.
 - `subSpace(subSpaceName: String) -> Space`: Spawns a child space.
 - `bindTo(eventHandler: Function) -> Function`: Wraps an event handler, passing in the space when eventually called. If object returned by eventHandler, it is shallow merged onto state.
 - `setState(mergeObject: Object, [changedBy: String])`: A method for changing a space's state using a shallow merge.
-- `subscribe(subscriber: Function)`: Adds a callback for when the state changes.
-- `parentSpace(name: String)`: Gets an ancestor space with the specified name.
+- `subscribe(subscriber: Function) -> Function`: Adds a callback for when the state changes.
+- `rootSpace -> Space`: Easy access to the top-most ancestor space.
 
 You create a new space by calling `new Space(…)` e.g.
 ```javascript
@@ -343,13 +343,28 @@ userSpace.subscribe(causedBy => {
 });
 ```
 
-### parentSpace
+### rootSpace
 
-Example: `space.parentSpace('root')` or `space.parentSpace('todos')`
+Example: `space.rootSpace`
 
-Ideally, you shouldn't need to access a parent space, but if you do, this will return the space with the specified name. It searches up the state tree until it finds the space with the specified name. The root space is given the default name `'root'`. If no matching space is found, `null` is returned.
+When deep in a sub-space in can be necessary to access the top-level space of the application. For example, you may have a `Login` component that needs to add the newly logged-in user's info to the root of the application's space, so that it can be available to other components in the app.
 
-#### Spawning Children
+e.g.
+```jsx
+const handleSignup = async ({ state, rootSpace }, event) => {
+  event.preventDefault();
+  var result = await fetch(…, { body: state }).then(res => res.json());
+  rootSpace.setState({ user: result.userInfo });
+};
+
+const SignupForm = ({ state, bindTo }) => (
+  <form onSubmit={bindTo(handleSignup)}>
+    …
+  </form>
+)
+```
+
+#### Spawning Sub-Spaces
 
 Calling `subSpace` with a string will turn that attribute of a space into a child space.
 
@@ -387,10 +402,6 @@ Sort of. The state you get from a space is an immutable object. You cannot chang
 **Why do list items need an `id` key?**
 
 Due to the fact that the state is immutable, if a sub-space for an item wants to update its state, SpaceAce needs to find it in the parent space's state. The way we've solved this is to use a unique id field. It's a similar concept to React's built-in `key` prop. In fact, every space in an array that has an `id` is automatically given an identical `key` field for convenience.
-
-**Why do I need to specify a name to get a parent space?**
-
-One of the goals of SpaceAce is to keep components as modular/reusable as possible. The use of `parentSpace` risks that by requiring a component to have a known parent component. By requiring a name to be specified, it encourages you to consider the relationship and interaction contract between the components. But perhaps more importantly, it also allows you to move the component around your app's structure and not have it break in an odd way.
 
 ## License
 
