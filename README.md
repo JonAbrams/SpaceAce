@@ -235,17 +235,31 @@ If value returned by your callback will be merged onto the space's state. If the
 
 If the space is an item in a list, then returning `null` will remove it from the list.
 
+If a promise is returned, SpaceAce will wait for it to resolve and then  merge the results onto the state (or replace if the state is an array).
+
 e.g.
 ```jsx
 const changeTodo = (space, event) => ({
-  content: event.target.value
+  content: event.target.value,
+  status: 'modified'
 });
 
 const toggleDone = ({ state: todo }) => ({
-  done: !todo.done
+  done: !todo.done,
+  status: 'modified'
 });
 
 const removeTodo = () => null;
+
+const saveTodo = ({ setState }) => {
+  setState({ status: 'saving' });
+  try {
+    await fetch(…);
+  } catch (e) {
+    return { status: 'errorSaving' };
+  }
+  return { status: 'saved' };
+};
 
 export default Todo = ({ state: todo, bind }) => (
   <div>
@@ -255,6 +269,9 @@ export default Todo = ({ state: todo, bind }) => (
     </button>
     <button onClick={bindTo(removeTodo)}>
       Remove
+    </button>
+    <button onClick={bindTo(saveTodo)}>
+      Save to server
     </button>
   </div>
 );

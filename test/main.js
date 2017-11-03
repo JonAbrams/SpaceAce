@@ -120,6 +120,17 @@ describe('Space', function() {
       assert.equal(called, 'once', 'additional');
       assert.equal(this.space.state, oldState);
     });
+
+    it('supports promise returns', async function() {
+      await this.space.bindTo(() => Promise.resolve({ newItem: 'is new' }))();
+      assert.deepEqual(this.space.state, {
+        initialState: 'here',
+        count: 1,
+        child: {},
+        nullItem: null,
+        newItem: 'is new',
+      });
+    });
   });
 
   describe('subscribers', function() {
