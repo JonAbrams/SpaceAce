@@ -21,11 +21,19 @@ describe('Space', function() {
     assert(Object.isFrozen(this.space.state));
   });
 
-  it('calls subscriber on subscribing', function(done) {
+  it('calls subscriber on subscribing', function() {
     const space = new Space();
     space.subscribe(causedBy => {
       assert.deepEqual(causedBy, 'initialized');
-      done();
+    });
+  });
+
+  describe('with skipInitialNotification', function() {
+    it('does not call subscriber on subscribing', function() {
+      const space = new Space({}, { skipInitialNotification: true });
+      space.subscribe(causedBy => {
+        assert.equal(1, 2);
+      });
     });
   });
 

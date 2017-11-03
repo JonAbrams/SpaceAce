@@ -163,17 +163,29 @@ Every instance of `Space` consists of:
 - `subscribe(subscriber: Function) -> Function`: Adds a callback for when the state changes.
 - `rootSpace -> Space`: Easy access to the top-most ancestor space.
 
-You create a new space by calling `new Space(…)` e.g.
+### new Space(initialState: Object, [options: Object])
+
+Returns a new space with its state defined by the passed in `initialState`.
+
+Optionally pass in an object as a second parameter to change the default behaviour of the space, and any of its sub-spaces.
+
+e.g.
 ```javascript
-const rootSpace = new Space({ initialState: true, todos: [] });
+const rootSpace = new Space({ initialState: true, todos: [] }, {
+  skipInitialNotification: true
+});
 ```
+
+**Options**
+
+`skipInitialNotification` - Boolean – Default: false – If true, does not invoke subscribers immediately when they're added.
 
 ### state
 
 `state` is a getter method on every space. It returns a frozen/immutable object
 that can be used to render a view. It includes the state of any child spaces as well. Do not change it directly.
 
-### subSpace
+### subSpace(name: String)
 
 Parameters:
  - String (the name of the key to spawn from)
