@@ -149,6 +149,11 @@ describe('Space', function() {
     });
 
     it('supports generators', function() {
+      let notificationCount = 0;
+      this.space.subscribe(causedBy => {
+        if (causedBy === 'initialized') return;
+        notificationCount++;
+      });
       this.space.bindTo(function* gen(space) {
         yield { nullItem: 'no longer null' };
         return { newItem: 'is new' };
@@ -160,6 +165,7 @@ describe('Space', function() {
         nullItem: 'no longer null',
         newItem: 'is new',
       });
+      assert.equal(notificationCount, 1);
     });
   });
 
