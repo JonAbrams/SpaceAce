@@ -134,18 +134,12 @@ describe('Space', function() {
       assert.equal(this.space.state, oldState);
     });
 
-    it('supports promise returns', function() {
-      return this.space.bindTo(() =>
-        Promise.resolve({ newItem: 'is new' })
-      )().then(() => {
-        assert.deepEqual(this.space.state, {
-          initialState: 'here',
-          count: 1,
-          child: {},
-          nullItem: null,
-          newItem: 'is new',
-        });
-      });
+    it('supports promise returns', async function() {
+      const promise = Promise.resolve({ newItem: 'is new' });
+      this.space.bindTo(() => promise)();
+      assert(!this.space.state.newItem);
+      await promise;
+      assert.equal(this.space.state.newItem, 'is new');
     });
 
     it('supports generators', function() {
@@ -166,6 +160,36 @@ describe('Space', function() {
         newItem: 'is new',
       });
       assert.equal(notificationCount, 1);
+    });
+
+    it('supports yielded promises', async function() {
+      let promise;
+      let notificationCount = 0;
+      this.space.subscribe(causedBy => {
+        if (causedBy === 'initialized') return;
+        notificationCount++;
+      });
+      this.space.bindTo(function* gen(space) {
+        promise = new Promise(resolve => {
+          setTimeout(() => {
+            resolve({ count: space.state.count + 1 });
+          }, 0);
+        });
+        yield { yielded: true, count: 2 };
+        yield promise;
+        return { count: 5 };
+      })();
+      assert.deepEqual(this.space.state, {
+        initialState: 'here',
+        count: 5,
+        child: {},
+        nullItem: null,
+        yielded: true,
+      });
+      assert.equal(notificationCount, 1);
+      await promise;
+      assert.equal(this.space.state.count, 6);
+      assert.equal(notificationCount, 2);
     });
   });
 
