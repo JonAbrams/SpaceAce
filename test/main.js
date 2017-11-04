@@ -99,6 +99,11 @@ describe('Space', function() {
         this.space.setState(() => {});
       });
     });
+
+    it('does not alter primitive values', function() {
+      this.space.setState({ arr: ['string'] });
+      assert.equal(this.space.state.arr[0], 'string');
+    });
   });
 
   describe('#bindTo', function() {
