@@ -147,6 +147,20 @@ describe('Space', function() {
         });
       });
     });
+
+    it('supports generators', function() {
+      this.space.bindTo(function* gen(space) {
+        yield { nullItem: 'no longer null' };
+        return { newItem: 'is new' };
+      })();
+      assert.deepEqual(this.space.state, {
+        initialState: 'here',
+        count: 1,
+        child: {},
+        nullItem: 'no longer null',
+        newItem: 'is new',
+      });
+    });
   });
 
   describe('subscribers', function() {
