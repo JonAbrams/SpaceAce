@@ -276,11 +276,15 @@ describe('Space', function() {
       assert.notEqual(oldState, this.subSpaceByName.state);
     });
 
-    it('subSpacing throws when cannot find attribute', function() {
-      assert.throws(
-        () => this.space.subSpace('missingChild'),
-        /Cannot attach sub-space to missingChild with type undefined/
-      );
+    it('subSpacing sets initial state to empty object', function() {
+      assert.deepEqual(this.space.subSpace('missingChild').state, {});
+    });
+
+    it('subSpacing throws when given invalid type as state', function() {
+      this.space.setState({ primitive: 'a string' });
+      assert.throws(() => {
+        this.space.subSpace('primitive');
+      }, /Cannot attach sub-space to primitive with type string/);
     });
 
     it('throws list subSpaces missing id', function() {
