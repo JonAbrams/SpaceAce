@@ -161,7 +161,7 @@ Every instance of `Space` consists of:
 - `bindTo(eventHandler: Function) -> Function`: Wraps an event handler, passing in the space when eventually called. If object returned by eventHandler, it is shallow merged onto state.
 - `setState(mergeObject: Object, [changedBy: String])`: A method for changing a space's state using a shallow merge.
 - `subscribe(subscriber: Function) -> Function`: Adds a callback for when the state changes.
-- `rootSpace -> Space`: Easy access to the top-most ancestor space.
+- `getRootSpace() -> Space`: Easy access to the top-most ancestor space.
 
 ### new Space(initialState: Object, [options: Object])
 
@@ -199,14 +199,14 @@ When a child space's state is updated, it notifies its parent space, which cause
 
 `subSpace` is usually called in your component's render for convenience. It's safe to do so because it does not alter state when called.
 
-`subSpace` requires there to be an existing object or array to spawn from. An error will be thrown otherwise.
+If not existing attribute exists for a `subSpace` to attach to, an empty object will be added and used. Note that even though this causes the parent state to change, no notification is made.
 
 e.g.
 ```jsx
-const TodoApp = ({ rootSpace }) => (
+const TodoApp = ({ getRootSpace }) => (
   <div>
-    {rootSpace.subSpace('todos').state.map(todo =>
-      <Todo {...rootSpace.subSpace('todos').subSpace(todo.id)} />
+    {getRootSpace().subSpace('todos').state.map(todo =>
+      <Todo {...getRootSpace().subSpace('todos').subSpace(todo.id)} />
     )}
   </div>
 );
@@ -372,18 +372,20 @@ userSpace.subscribe(causedBy => {
 });
 ```
 
-### rootSpace
+### getRootSpace()
 
-Example: `space.rootSpace`
+Example: `space.getRootSpace()`
+
+Returns the top-most level space.
 
 When deep in a sub-space in can be necessary to access the top-level space of the application. For example, you may have a `Login` component that needs to add the newly logged-in user's info to the root of the application's space, so that it can be available to other components in the app.
 
 e.g.
 ```jsx
-const handleSignup = async ({ state, rootSpace }, event) => {
+const handleSignup = async ({ state, getRootSpace() }, event) => {
   event.preventDefault();
   var result = await fetch(…, { body: state }).then(res => res.json());
-  rootSpace.setState({ user: result.userInfo });
+  getRootSpace().setState({ user: result.userInfo });
 };
 
 const SignupForm = ({ state, bindTo }) => (
