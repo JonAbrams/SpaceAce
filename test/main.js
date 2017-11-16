@@ -146,6 +146,11 @@ describe('Space', function() {
       assert.equal(this.space.state, oldState);
     });
 
+    it('replaces state if returned is an array', function() {
+      this.space.bindTo(() => ['val'])();
+      assert.deepEqual(this.space.state, ['val']);
+    });
+
     it('supports promise returns', async function() {
       const promise = Promise.resolve({ newItem: 'is new' });
       this.space.bindTo(() => promise)();
