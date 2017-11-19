@@ -304,14 +304,6 @@ describe('Space', function() {
       }, /Cannot attach sub-space to primitive with type string/);
     });
 
-    it('throws list subSpaces missing id', function() {
-      assert.throws(() => {
-        this.space.bindTo(({ subSpace }) => ({
-          list: [subSpace({ value: 'present' })],
-        }))();
-      });
-    });
-
     it('can fetch root space', function() {
       this.subSpaceByName.setState({ gc: {} });
       const grandChild = this.subSpaceByName.subSpace('gc');
