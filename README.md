@@ -133,6 +133,14 @@ function removeTodo(todoSpace, e) {
 }
 ```
 
+## Browser Compatibility
+
+`lib/Space.js` targets ES5. It makes use of `Array.isArray`, `Object.freeze`, and `Object.defineProperties`. All major browsers from at least the past 5 years should be supported. If support for ancient browsers is needed, check out [es5-shim](https://github.com/es-shims/es5-shim).
+
+Also, `Object.assign` is used, which is from ES6, which supports most browsers of the past couple years. You can use [es6-shim](https://github.com/es-shims/es6-shim) or just [object.assign](https://github.com/ljharb/object.assign) to add support for older browsers.
+
+If you notice any other browser compatibility issues, please open an issue.
+
 ## Documentation
 
 ### What is a Space?
