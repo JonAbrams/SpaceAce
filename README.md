@@ -225,15 +225,16 @@ const TodoList = ({ space: { state: todos, subSpace } }) => (
 
 Parameters:
   - Function (callback)
+  - Pass-through params (optional)
 
 Returns:
  - Function (the callback bounded to the space)
 
-Wraps the given callback function and returns a new function. When the returned function is called, it calls the callback, but with the space passed in as the first parameter.
+Wraps the given callback function and returns a new function. When the returned function is called, it calls the given callback, but with the space passed in as the first parameter. Any extra parameters given to `bindTo` are given to the callback when its called.
 
 This new function can then be used as an event handler.
 
-The event is passed in as the second parameter to the callback, useful for calling `event.preventDefault()`, or for reading `event.target.value`.
+The event is passed in as the last parameter to the callback, useful for calling `event.preventDefault()`, or for reading `event.target.value`.
 
 The value returned by your callback will be recursively merged onto the space's state. If the space's state is an array, the returned value will overwrite the state instead.
 
@@ -257,24 +258,31 @@ const toggleDone = ({ state: todo }) => ({
 
 const removeTodo = () => null;
 
-const saveTodo = function* () => {
+const saveTodo = function* (space, renderedAt, event) => {
+  event.preventDefault();
+  console.log(
+    "Saving todo. It was last rendered at: ",
+    renderedAt.toISOString()
+  );
   yield { status: 'saving' };
   return fetch(…).then(() => ({ status: 'saved' }))
     .catch(e => ({ status: 'errorSaving' }));
 };
 
-export default Todo = ({ state: todo, bind }) => (
+export default Todo = ({ state: todo, bindTo }) => (
   <div>
-    <input type="text" value={state.content} onChange={bindTo(changeTodo)} />
-    <button onClick={bindTo(toggleDone)}>
-      {todo.done ? 'Restore' : 'Done'}
-    </button>
-    <button onClick={bindTo(removeTodo)}>
-      Remove
-    </button>
-    <button onClick={bindTo(saveTodo)}>
-      Save to server
-    </button>
+    <form onSubmit={bindTo(saveTodo, new Date())}>
+      <input type="text" value={state.content} onChange={bindTo(changeTodo)} />
+      <button onClick={bindTo(toggleDone)} type="button">
+        {todo.done ? 'Restore' : 'Done'}
+      </a>
+      <button onClick={bindTo(removeTodo)} type="button">
+        Remove
+      </button>
+      <button type="submit">
+        Save to server
+      </button>
+    </form>
   </div>
 );
 ```

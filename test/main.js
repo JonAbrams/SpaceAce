@@ -142,8 +142,17 @@ describe('Space', function() {
         called = event.called;
         assert.equal(additional, 'additional');
       })({ called: 'once' }, 'additional');
-      assert.equal(called, 'once', 'additional');
+      assert.equal(called, 'once');
       assert.equal(this.space.state, oldState);
+    });
+
+    it('passes through extra params on bind', function() {
+      let called = false;
+      this.space.bindTo((space, id, event) => {
+        called = event.called;
+        assert.equal(id, 'abc123');
+      }, 'abc123')({ called: 'once' });
+      assert.equal(called, 'once', 'additional');
     });
 
     it('replaces state if returned is an array', function() {
