@@ -150,10 +150,10 @@ If you notice any other browser compatibility issues, please open an issue.
 Every instance of `Space` consists of:
 - `state -> Object`: An immutable state, which can only be overwritten using an action.
 - `subSpace(subSpaceName: String) -> Space`: Spawns a child space.
-- `bindTo(eventHandler: Function) -> Function`: Wraps an event handler, passing in the space when eventually called. If object returned by eventHandler, it is shallow merged onto state.
-- `setState(mergeObject: Object, [changedBy: String])`: A method for changing a space's state using a shallow merge.
+- `bindTo(eventHandler: Function) -> Function`: Wraps an event handler, passing in the space when eventually called. If object returned by eventHandler, it is recursively merged onto the space's state.
+- `setState(mergeObject: Object, [changedBy: String])`: A method for changing a space's state by doing a recursive merge.
 - `subscribe(subscriber: Function) -> Function`: Adds a callback for when the state changes.
-- `getRootSpace() -> Space`: Easy access to the top-most ancestor space.
+- `getRootSpace() -> Space`: Shortcut to access the top-most ancestor space.
 
 ### new Space(initialState: Object, [options: Object])
 
@@ -235,11 +235,13 @@ This new function can then be used as an event handler.
 
 The event is passed in as the second parameter to the callback, useful for calling `event.preventDefault()`, or for reading `event.target.value`.
 
-If value returned by your callback will be merged onto the space's state. If the space's state is an array, the returned value will overwrite the state instead.
+The value returned by your callback will be recursively merged onto the space's state. If the space's state is an array, the returned value will overwrite the state instead.
 
 If the space is an item in a list, then returning `null` will remove it from the list.
 
-If a promise is returned, SpaceAce will wait for it to resolve and then  merge the results onto the state (or replace if the state is an array).
+If a promise is returned, SpaceAce will wait for it to resolve and then recursively merge the results onto the state (or replace if the state is an array).
+
+SpaceAce supports [generators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators), allowing you to return values multiple times by calling `yield` with a value that will be recursively merged onto the space's state. With generators, subscribers won't be notified until your function finally calls `return`.
 
 e.g.
 ```jsx
@@ -255,14 +257,10 @@ const toggleDone = ({ state: todo }) => ({
 
 const removeTodo = () => null;
 
-const saveTodo = ({ setState }) => {
-  setState({ status: 'saving' });
-  try {
-    await fetch(…);
-  } catch (e) {
-    return { status: 'errorSaving' };
-  }
-  return { status: 'saved' };
+const saveTodo = function* () => {
+  yield { status: 'saving' };
+  return fetch(…).then(() => ({ status: 'saved' }))
+    .catch(e => ({ status: 'errorSaving' }));
 };
 
 export default Todo = ({ state: todo, bind }) => (
