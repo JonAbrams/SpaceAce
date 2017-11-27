@@ -152,6 +152,7 @@ Every instance of `Space` consists of:
 - `subSpace(subSpaceName: String) -> Space`: Spawns a child space.
 - `bindTo(eventHandler: Function) -> Function`: Wraps an event handler, passing in the space when eventually called. If object returned by eventHandler, it is recursively merged onto the space's state.
 - `setState(mergeObject: Object, [changedBy: String])`: A method for changing a space's state by doing a recursive merge.
+- `replaceState(newState: Object, [changedBy: String])`: A method for replacing a space's state.
 - `subscribe(subscriber: Function) -> Function`: Adds a callback for when the state changes.
 - `getRootSpace() -> Space`: Shortcut to access the top-most ancestor space.
 
@@ -325,7 +326,7 @@ Parameter:
 
 Replaces the space's state with the object or array provided. Pass in a second parameter to give the update a name for the `causedBy` passed to subscribers.
 
-Should be used for altering an array, or for replaying state.
+Should be used for altering a state that is an array, or for replaying state.
 
 e.g.
 ```jsx

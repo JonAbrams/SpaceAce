@@ -219,6 +219,20 @@ describe('Space', function() {
     });
   });
 
+  describe('#replaceState', function() {
+    it('replaces the state', function() {
+      let called = false;
+      this.space.subscribe(causedBy => {
+        if (causedBy === 'initialized') return;
+        called = true;
+        assert.equal(causedBy, 'root#replacer');
+      });
+      this.space.replaceState({ abc: 123 }, 'replacer');
+      assert.deepEqual(this.space.state, { abc: 123 });
+      assert(called);
+    });
+  });
+
   describe('subscribers', function() {
     beforeEach(function() {
       this.subscriberCalled = false;
