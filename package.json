@@ -11,7 +11,12 @@
     "type": "git",
     "url": "git+https://github.com/JonAbrams/SpaceAce.git"
   },
-  "keywords": ["flux", "react", "redux", "store"],
+  "keywords": [
+    "flux",
+    "react",
+    "redux",
+    "store"
+  ],
   "author": "Jon Abrams <jon@jonabrams.com>",
   "license": "MIT",
   "bugs": {
@@ -19,19 +24,19 @@
   },
   "homepage": "https://github.com/JonAbrams/SpaceAce#readme",
   "devDependencies": {
-    "babel-eslint": "^8.0.1",
-    "eslint": "^4.8.0",
-    "eslint-config-prettier": "^2.6.0",
+    "babel-eslint": "^8.0.3",
+    "eslint": "^4.12.1",
+    "eslint-config-prettier": "^2.9.0",
     "eslint-config-standard": "^10.2.1",
-    "eslint-plugin-import": "^2.7.0",
-    "eslint-plugin-node": "^5.2.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-node": "^5.2.1",
     "eslint-plugin-prettier": "^2.3.1",
-    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
-    "mocha": "^3.4.2",
-    "prettier": "^1.7.3",
+    "mocha": "^3.5.3",
+    "prettier": "^1.8.2",
     "source-map-support": "^0.5.0",
-    "webpack": "^3.4.1"
+    "webpack": "^3.9.1"
   },
   "dependencies": {},
   "prettier": {
