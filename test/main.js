@@ -91,6 +91,28 @@ describe('Space', function() {
       });
     });
 
+    it('recursively merges onto sub-spaces and objects', function() {
+      const childSpace = this.space.subSpace('child');
+      childSpace.setState({ val: true });
+      this.space.setState({ objChild: { val: 123 } });
+
+      this.space.setState({
+        count: 2,
+        child: { otherVal: 'abc' },
+        objChild: {
+          otherVal: 321,
+        },
+      });
+
+      assert.deepEqual(this.space.state, {
+        initialState: 'here',
+        count: 2,
+        nullItem: null,
+        child: { val: true, otherVal: 'abc' },
+        objChild: { val: 123, otherVal: 321 },
+      });
+    });
+
     it('can specify action name', function() {
       this.space.subscribe(causedBy => {
         if (causedBy === 'initialized') return;
@@ -185,7 +207,7 @@ describe('Space', function() {
         nullItem: 'no longer null',
         newItem: 'is new',
       });
-      assert.equal(notificationCount, 1);
+      assert.equal(notificationCount, 2);
     });
 
     it('supports yielded promises', async function() {
@@ -212,10 +234,10 @@ describe('Space', function() {
         nullItem: null,
         yielded: true,
       });
-      assert.equal(notificationCount, 1);
+      assert.equal(notificationCount, 2);
       await promise;
       assert.equal(this.space.state.count, 6);
-      assert.equal(notificationCount, 2);
+      assert.equal(notificationCount, 3);
     });
   });
 
