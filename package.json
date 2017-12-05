@@ -1,6 +1,6 @@
 {
   "name": "spaceace",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "A fancy immutable storage library for JavaScript",
   "main": "lib/Space.js",
   "scripts": {
@@ -34,9 +34,9 @@
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
     "mocha": "^3.5.3",
-    "prettier": "^1.8.2",
+    "prettier": "^1.9.0",
     "source-map-support": "^0.5.0",
-    "webpack": "^3.9.1"
+    "webpack": "^3.10.0"
   },
   "dependencies": {},
   "prettier": {
