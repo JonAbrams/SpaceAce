@@ -168,6 +168,11 @@ describe('Space', function() {
       assert.equal(this.space.state, oldState);
     });
 
+    it('can overwrite existing null values', function() {
+      this.space.setState({ nullItem: null });
+      assert.equal(this.space.state.nullItem, null);
+    });
+
     it('passes through extra params on bind', function() {
       let called = false;
       this.space.bindTo((space, id, event) => {
