@@ -173,6 +173,12 @@ describe('Space', function() {
       assert.equal(this.space.state.nullItem, null);
     });
 
+    it('supports regexes', function() {
+      this.space.setState({ reg: /abc/ });
+      assert.equal(this.space.state.reg.toString(), '/abc/');
+      assert(this.space.state.reg instanceof RegExp);
+    });
+
     it('passes through extra params on bind', function() {
       let called = false;
       this.space.bindTo((space, id, event) => {
