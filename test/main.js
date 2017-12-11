@@ -354,10 +354,14 @@ describe('Space', function() {
     });
 
     it('subSpacing throws when given invalid type as state', function() {
-      this.space.setState({ primitive: 'a string' });
+      this.space.setState({ primitive: 'a string', date: new Date() });
       assert.throws(() => {
         this.space.subSpace('primitive');
       }, /Cannot attach sub-space to primitive with type string/);
+
+      assert.throws(() => {
+        this.space.subSpace('date');
+      }, /Cannot attach sub-space to date with type Date/);
     });
 
     it('can fetch root space', function() {
