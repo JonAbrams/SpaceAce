@@ -375,6 +375,21 @@ describe('Space', function() {
       assert.equal(grandChild.getRootSpace(), this.space);
     });
 
+    it('can update children', function() {
+      const childOne = this.space.subSpace('childOne');
+      const childTwo = this.space.subSpace('childTwo');
+      const gChild = childTwo.subSpace('gChild');
+      assert.deepEqual(childOne.state, {});
+      assert.deepEqual(childTwo.state, {});
+      this.space.setState({
+        childOne: { val: 'abc' },
+        childTwo: { val: '123', gChild: { val: 'xyz' } },
+      });
+      assert.equal(childOne.state.val, 'abc');
+      assert.equal(childTwo.state.val, '123');
+      assert.equal(gChild.state.val, 'xyz');
+    });
+
     it('can update siblings', function() {
       this.subSpaceByName.getRootSpace().setState({
         otherChild: {
