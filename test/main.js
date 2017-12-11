@@ -350,7 +350,11 @@ describe('Space', function() {
     });
 
     it('subSpacing sets initial state to empty object', function() {
+      // undefined
       assert.deepEqual(this.space.subSpace('missingChild').state, {});
+
+      // null
+      assert.deepEqual(this.space.subSpace('nullItem').state, {});
     });
 
     it('subSpacing throws when given invalid type as state', function() {
