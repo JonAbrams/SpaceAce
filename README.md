@@ -14,16 +14,17 @@ Any and all [feedback is welcome](https://twitter.com/JonathanAbrams)!
 
 ## Benefits
 
-- **Immutable** – Centralized state with easy to track changes
-- **Modular** – Easily create sub-states for each component
-- **No Boilerplate** – Components can merge changes onto their part of the state themselves, no need to declare actions or have have a central reducer.
-- **Convenient API** – Create sub-spaces and bind to events within your render functions.
+* **Immutable** – Centralized state with easy to track changes
+* **Modular** – Easily create sub-states for each component
+* **No Boilerplate** – Components can merge changes onto their part of the state themselves, no need to declare actions or have have a central reducer.
+* **Convenient API** – Create sub-spaces and bind to events within your render functions.
 
 ## Example Usage
 
 SpaceAce can be used with any front-end view library (such as Vue and Angular), but the examples below are done with React.
 
 **index.js**
+
 ```jsx
 import react from 'react';
 import ReactDOM from 'react-dom';
@@ -44,6 +45,7 @@ rootSpace.subscribe(causedBy => {
 ```
 
 **Container.js**
+
 ```jsx
 import react from 'react';
 import TodoList from './TodoList';
@@ -64,6 +66,7 @@ export default function Container({ space }) {
 ```
 
 **TodoList.js**
+
 ```jsx
 import react from 'react';
 import uuid from 'uuid/v4';
@@ -102,6 +105,7 @@ function addTodo(space, e) {
 ```
 
 **Todo.js**
+
 ```jsx
 import react from 'react';
 
@@ -110,14 +114,14 @@ export default function Todo({ space }) {
   const { setState } = space;
   const doneClassName = todo.done ? 'done' : '';
 
-  return(
-    <li className='todo'>
-      <input type='checkbox' checked={done} onChange={setState(toggleDone)} />
+  return (
+    <li className="todo">
+      <input type="checkbox" checked={done} onChange={setState(toggleDone)} />
       <span className={doneClassName}>{todo.msg}</span>
       <button onClick={setState(removeTodo)}>Remove Todo</button>
     </li>
   );
-};
+}
 
 // The returned value from an action is merged onto the existing state
 // In this case, only the `done` attribute is changed on the todo
@@ -148,13 +152,15 @@ If you notice any other browser compatibility issues, please open an issue.
 `Space` is the default class provided by the `spaceace` npm package.
 
 Every instance of `Space` consists of:
-- `state -> Object`: An immutable state, which can only be overwritten using an action.
-- `subSpace(subSpaceName: String) -> Space`: Spawns a child space.
-- `bindTo(eventHandler: Function) -> Function`: Wraps an event handler, passing in the space when eventually called. If object returned by eventHandler, it is recursively merged onto the space's state.
-- `setState(mergeObject: Object, [changedBy: String])`: A method for changing a space's state by doing a recursive merge.
-- `replaceState(newState: Object, [changedBy: String])`: A method for replacing a space's state.
-- `subscribe(subscriber: Function) -> Function`: Adds a callback for when the state changes.
-- `getRootSpace() -> Space`: Shortcut to access the top-most ancestor space.
+
+* `state -> Object`: An immutable state, which can only be overwritten using an action.
+* `subSpace(subSpaceName: String) -> Space`: Spawns a child space.
+* `bindTo(eventHandler: Function) -> Function`: Wraps an event handler, passing in the space when eventually called. If object returned by eventHandler, it is recursively merged onto the space's state.
+* `setState(mergeObject: Object, [changedBy: String])`: A method for changing a space's state by doing a recursive merge.
+* `replaceState(newState: Object, [changedBy: String])`: A method for replacing a space's state.
+* `setDefaultState(mergeObject: Object)`: Sets attributes that do not exist yet on the state. Useful for initializing a sub-space's state.
+* `subscribe(subscriber: Function) -> Function`: Adds a callback for when the state changes.
+* `getRootSpace() -> Space`: Shortcut to access the top-most ancestor space.
 
 ### new Space(initialState: Object, [options: Object])
 
@@ -163,10 +169,14 @@ Returns a new space with its state defined by the passed in `initialState`.
 Optionally pass in an object as a second parameter to change the default behaviour of the space, and any of its sub-spaces.
 
 e.g.
+
 ```javascript
-const rootSpace = new Space({ initialState: true, todos: [] }, {
-  skipInitialNotification: true
-});
+const rootSpace = new Space(
+  { initialState: true, todos: [] },
+  {
+    skipInitialNotification: true
+  }
+);
 ```
 
 **Options**
@@ -181,10 +191,12 @@ that can be used to render a view. It includes the state of any child spaces as 
 ### subSpace(name: String)
 
 Parameters:
- - String (the name of the key to spawn from)
 
- Returns:
-  - A new space linked to the current space
+* String (the name of the key to spawn from)
+
+Returns:
+
+* A new space linked to the current space
 
 Use `subSpace` to take part of the current space's state and return a child space based on it.
 
@@ -195,17 +207,25 @@ When a child space's state is updated, it notifies its parent space, which cause
 If not existing attribute exists for a `subSpace` to attach to, an empty object will be added and used. Note that even though this causes the parent state to change, no notification is made.
 
 e.g.
+
 ```jsx
 const TodoApp = ({ getRootSpace }) => (
   <div>
-    {getRootSpace().subSpace('todos').state.map(todo =>
-      <Todo {...getRootSpace().subSpace('todos').subSpace(todo.id)} />
-    )}
+    {getRootSpace()
+      .subSpace('todos')
+      .state.map(todo => (
+        <Todo
+          {...getRootSpace()
+            .subSpace('todos')
+            .subSpace(todo.id)}
+        />
+      ))}
   </div>
 );
 ```
 
 or more properly:
+
 ```jsx
 const TodoApp = ({ space }) => (
   <div>
@@ -225,11 +245,13 @@ const TodoList = ({ space: { state: todos, subSpace } }) => (
 ### bindTo
 
 Parameters:
-  - Function (callback)
-  - Pass-through params (optional)
+
+* Function (callback)
+* Pass-through params (optional)
 
 Returns:
- - Function (the callback bounded to the space)
+
+* Function (the callback bounded to the space)
 
 Wraps the given callback function and returns a new function. When the returned function is called, it calls the given callback, but with the space passed in as the first parameter. Any extra parameters given to `bindTo` are given to the callback when its called.
 
@@ -246,6 +268,7 @@ If a promise is returned, SpaceAce will wait for it to resolve and then recursiv
 SpaceAce supports [generators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators), allowing you to return values multiple times by calling `yield` with a value that will be recursively merged onto the space's state. With generators, subscribers won't be notified until your function finally calls `return`.
 
 e.g.
+
 ```jsx
 const changeTodo = (space, event) => ({
   content: event.target.value,
@@ -291,8 +314,9 @@ export default Todo = ({ state: todo, bindTo }) => (
 ### setState
 
 Parameters:
-  - Object (for merging onto state)
-  - (optional) String – Used as a name for logging
+
+* Object (for merging onto state)
+* (optional) String – Used as a name for logging
 
 Shallow merges the given object it into the space's state. Pass in a second parameter to give the update a name for the `causedBy` passed to subscribers.
 
@@ -301,6 +325,7 @@ If the space's state is an array, setState will throw an error. Use `replaceStat
 Often used to apply async data to a state. Use `bindTo` to apply changes caused by the user.
 
 e.g.
+
 ```jsx
 class TodoApp extends React.Component {
   async componentDidMount() {
@@ -320,31 +345,62 @@ class TodoApp extends React.Component {
 
 ### replaceState
 
-Parameter:
- - Object or array
- - (optional) String – Used as a name for logging
+Parameters:
+
+* Object or array
+* (optional) String – Used as a name for logging
 
 Replaces the space's state with the object or array provided. Pass in a second parameter to give the update a name for the `causedBy` passed to subscribers.
 
 Should be used for altering a state that is an array, or for replaying state.
 
 e.g.
+
 ```jsx
 const addTodo = ({ state: todos, replaceState }) => {
-  replaceState([...todos, {
-    content: 'A brand new todo',
-    done: false
-  }]);
+  replaceState([
+    ...todos,
+    {
+      content: 'A brand new todo',
+      done: false
+    }
+  ]);
 };
 
 const TodoList = ({ state: todos, subSpace, bind }) => (
   <ul>
-    {todos.map(todo => (
-      <Todo {...subSpace(todo.id)} />
-    ))}
+    {todos.map(todo => <Todo {...subSpace(todo.id)} />)}
     <button onClick={bindTo(addTodo)}>Add Todo</button>
   </ul>
 );
+```
+
+### setDefaultState
+
+Parameter:
+
+* Object
+
+Sets the specified attributes onto the space's state, if those attributes are currently undefined. Used to initialize a default state for a sub-space.
+
+**Note**: Be sure to use this instead of `setState` in your component constructors to prevent you state from being overwritten when using hot-reloading.
+
+e.g.
+
+```jsx
+class Modal extends React.Component {
+  constructor(props) {
+    super(props);
+    props.setDefaultState({
+      open: false,
+      step: 1
+    });
+  }
+
+  render() {
+    return …;
+  }
+}
 ```
 
 ### subscribe
@@ -359,6 +415,7 @@ the subscriber was invoked. It's useful for debugging purposes. The format of
 Note: For convenience, this subscriber is called immediately when it's declared, with _causedBy_ set to `'initialized'`.
 
 e.g.
+
 ```jsx
 const userSpace = new Space({ name: 'Jon' });
 
@@ -380,6 +437,7 @@ Returns the top-most level space.
 When deep in a sub-space in can be necessary to access the top-level space of the application. For example, you may have a `Login` component that needs to add the newly logged-in user's info to the root of the application's space, so that it can be available to other components in the app.
 
 e.g.
+
 ```jsx
 const handleSignup = async ({ state, getRootSpace() }, event) => {
   event.preventDefault();
@@ -399,6 +457,7 @@ const SignupForm = ({ state, bindTo }) => (
 Calling `subSpace` with a string will turn that attribute of a space into a child space.
 
 e.g. Given a space called `userSpace` with this state:
+
 ```javascript
 {
   name: 'Jon',

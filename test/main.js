@@ -56,6 +56,7 @@ describe('Space', function() {
       'subSpace',
       'bindTo',
       'replaceState',
+      'setDefaultState',
       'getRootSpace',
     ];
     const childSpace = this.space.subSpace('child');
@@ -262,6 +263,29 @@ describe('Space', function() {
       });
       this.space.replaceState({ abc: 123 }, 'replacer');
       assert.deepEqual(this.space.state, { abc: 123 });
+      assert(called);
+    });
+  });
+
+  describe('#setDefaultState', function() {
+    it('only overwrites undefined attributes', function() {
+      let called = false;
+      this.space.subscribe(function(causedBy) {
+        if (causedBy === 'initialized') return;
+        called = true;
+        assert.equal(causedBy, 'root#setDefaultState');
+      });
+      this.space.setDefaultState({
+        initialState: 'changed?',
+        newKey: 'is added',
+      });
+      assert.deepEqual(this.space.state, {
+        initialState: 'here',
+        count: 1,
+        child: {},
+        nullItem: null,
+        newKey: 'is added',
+      });
       assert(called);
     });
   });
