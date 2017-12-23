@@ -32,13 +32,13 @@ import Space from 'spaceace';
 import Container from './Container';
 
 // Create the root "space" along with its initial state
-const rootSpace = new Space({ name: 'Jon', todos: [] });
-rootSpace.subscribe(causedBy => {
+const space = new Space({ name: 'Jon', todos: [] });
+space.subscribe(causedBy => {
   // Example `causedBy`s:
   // 'todoList#addTodo', 'todos[akd4a1plj]#toggleDone'
   console.log(`Re-render of <Container /> caused by ${causedBy}`);
   ReactDOM.render(
-    <Container space={rootSpace} />,
+    <Container space={space} />,
     document.getElementById('react-container')
   );
 });
@@ -160,7 +160,7 @@ Every instance of `Space` consists of:
 * `replaceState(newState: Object, [changedBy: String])`: A method for replacing a space's state.
 * `setDefaultState(mergeObject: Object)`: Sets attributes that do not exist yet on the state. Useful for initializing a sub-space's state.
 * `subscribe(subscriber: Function) -> Function`: Adds a callback for when the state changes.
-* `getRootSpace() -> Space`: Shortcut to access the top-most ancestor space.
+* `rootSpace -> Space`: Shortcut to access the top-most ancestor space.
 
 ### new Space(initialState: Object, [options: Object])
 
@@ -173,9 +173,7 @@ e.g.
 ```javascript
 const rootSpace = new Space(
   { initialState: true, todos: [] },
-  {
-    skipInitialNotification: true
-  }
+  { skipInitialNotification: true }
 );
 ```
 
@@ -209,22 +207,18 @@ If not existing attribute exists for a `subSpace` to attach to, an empty object 
 e.g.
 
 ```jsx
-const TodoApp = ({ getRootSpace }) => (
+const TodoApp = ({ space }) => (
   <div>
-    {getRootSpace()
+    {space
       .subSpace('todos')
       .state.map(todo => (
-        <Todo
-          {...getRootSpace()
-            .subSpace('todos')
-            .subSpace(todo.id)}
-        />
+        <Todo {...space.subSpace('todos').subSpace(todo.id)} />
       ))}
   </div>
 );
 ```
 
-or more properly:
+or more "properly":
 
 ```jsx
 const TodoApp = ({ space }) => (
@@ -362,8 +356,8 @@ const addTodo = ({ state: todos, replaceState }) => {
     ...todos,
     {
       content: 'A brand new todo',
-      done: false
-    }
+      done: false,
+    },
   ]);
 };
 
@@ -428,9 +422,9 @@ userSpace.subscribe(causedBy => {
 });
 ```
 
-### getRootSpace()
+### rootSpace
 
-Example: `space.getRootSpace()`
+Example: `space.rootSpace`
 
 Returns the top-most level space.
 
@@ -439,10 +433,10 @@ When deep in a sub-space in can be necessary to access the top-level space of th
 e.g.
 
 ```jsx
-const handleSignup = async ({ state, getRootSpace() }, event) => {
+const handleSignup = async ({ state, rootSpace }, event) => {
   event.preventDefault();
   var result = await fetch(…, { body: state }).then(res => res.json());
-  getRootSpace().setState({ user: result.userInfo });
+  rootSpace.setState({ user: result.userInfo });
 };
 
 const SignupForm = ({ state, bindTo }) => (

@@ -28,18 +28,6 @@ describe('Space', function() {
     });
   });
 
-  it('can be JSONified', function() {
-    const jsonStr = JSON.stringify(this.space);
-    assert.deepEqual(JSON.parse(jsonStr), {
-      state: {
-        child: {},
-        count: 1,
-        initialState: 'here',
-        nullItem: null,
-      },
-    });
-  });
-
   describe('with skipInitialNotification', function() {
     it('does not call subscriber on subscribing', function() {
       const space = new Space({}, { skipInitialNotification: true });
@@ -52,12 +40,12 @@ describe('Space', function() {
   it('spaces only have these enumerated keys', function() {
     const publicMethods = [
       'state',
+      'rootSpace',
       'setState',
       'subSpace',
       'bindTo',
       'replaceState',
       'setDefaultState',
-      'getRootSpace',
     ];
     const childSpace = this.space.subSpace('child');
     assert.deepEqual(Object.keys(this.space), publicMethods);
@@ -290,6 +278,16 @@ describe('Space', function() {
     });
   });
 
+  describe('#toJSON', function() {
+    it('returns state as JSON string', function() {
+      assert.equal(this.space.toJSON(), this.space.state);
+      assert.equal(
+        JSON.stringify(this.space),
+        JSON.stringify(this.space.state)
+      );
+    });
+  });
+
   describe('subscribers', function() {
     beforeEach(function() {
       this.subscriberCalled = false;
@@ -395,8 +393,8 @@ describe('Space', function() {
     it('can fetch root space', function() {
       this.subSpaceByName.setState({ gc: {} });
       const grandChild = this.subSpaceByName.subSpace('gc');
-      assert.equal(this.subSpaceByName.getRootSpace(), this.space);
-      assert.equal(grandChild.getRootSpace(), this.space);
+      assert.equal(this.subSpaceByName.rootSpace, this.space);
+      assert.equal(grandChild.rootSpace, this.space);
     });
 
     it('can update children', function() {
@@ -415,7 +413,7 @@ describe('Space', function() {
     });
 
     it('can update siblings', function() {
-      this.subSpaceByName.getRootSpace().setState({
+      this.subSpaceByName.rootSpace.setState({
         otherChild: {
           addedValue: 'present',
         },
@@ -446,7 +444,7 @@ describe('Space', function() {
         subscriberCalled += 1;
       });
 
-      this.subSpaceByName.getRootSpace().setState({
+      this.subSpaceByName.rootSpace.setState({
         otherChild: {
           otherChildChild: {
             addedValue: 'present',
