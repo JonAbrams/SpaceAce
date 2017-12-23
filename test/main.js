@@ -280,10 +280,10 @@ describe('Space', function() {
 
   describe('#toJSON', function() {
     it('returns state as JSON string', function() {
-      assert.equal(this.space.toJSON(), this.space.state);
+      assert.deepEqual(this.space.toJSON(), { state: this.space.state });
       assert.equal(
         JSON.stringify(this.space),
-        JSON.stringify(this.space.state)
+        JSON.stringify({ state: this.space.state })
       );
     });
   });
