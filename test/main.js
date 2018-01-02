@@ -239,6 +239,18 @@ describe('Space', function() {
       assert.equal(this.space.state.count, 6);
       assert.equal(notificationCount, 3);
     });
+
+    it('memoizes functions', function() {
+      const funcA = function(space) {
+        return { val: true };
+      };
+      const funcB = function(space) {
+        return { val: false };
+      };
+      const bound = this.space.bindTo(funcA);
+      assert.equal(bound, this.space.bindTo(funcA));
+      assert.notEqual(bound, this.space.bindTo(funcB));
+    });
   });
 
   describe('#replaceState', function() {
