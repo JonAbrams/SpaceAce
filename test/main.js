@@ -240,16 +240,29 @@ describe('Space', function() {
       assert.equal(notificationCount, 3);
     });
 
-    it('memoizes functions', function() {
-      const funcA = function(space) {
-        return { val: true };
-      };
-      const funcB = function(space) {
-        return { val: false };
-      };
-      const bound = this.space.bindTo(funcA);
-      assert.equal(bound, this.space.bindTo(funcA));
-      assert.notEqual(bound, this.space.bindTo(funcB));
+    describe('memoization', function() {
+      it('lone function', function() {
+        const funcA = function(space) {
+          return { val: true };
+        };
+        const funcB = function(space) {
+          return { val: false };
+        };
+        const bound = this.space.bindTo(funcA);
+        assert.equal(bound, this.space.bindTo(funcA));
+        assert.notEqual(bound, this.space.bindTo(funcB));
+      });
+
+      it('with stored pass-through params', function() {
+        const funcA = function(space, val) {
+          return { val };
+        };
+        let bound = this.space.bindTo(funcA, true);
+        assert.equal(bound, this.space.bindTo(funcA, true));
+        assert.notEqual(bound, this.space.bindTo(funcA, false));
+        bound = this.space.bindTo(funcA, false);
+        assert.equal(bound, this.space.bindTo(funcA, false));
+      });
     });
   });
 
