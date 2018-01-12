@@ -530,7 +530,7 @@ describe('Space', function() {
             { id: '321', val: 'cba' },
             { id: '123', val: 'ABC' },
           ]);
-          // assert.equal(itemSpace, this.listSpace.subSpace('123'));
+          assert.equal(itemSpace, this.listSpace.subSpace('123'));
         });
       });
 
