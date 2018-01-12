@@ -519,6 +519,19 @@ describe('Space', function() {
             /Could not find item with id 321 in root/
           );
         });
+
+        it('preserves list item spaces', function() {
+          const itemSpace = this.listSpace.subSpace('123');
+          this.listSpace.setState([
+            { id: '321', val: 'cba' },
+            { id: '123', val: 'ABC' },
+          ]);
+          assert.deepEqual(this.listSpace.state, [
+            { id: '321', val: 'cba' },
+            { id: '123', val: 'ABC' },
+          ]);
+          // assert.equal(itemSpace, this.listSpace.subSpace('123'));
+        });
       });
 
       it('supports subSpaces in lists', function() {
@@ -577,6 +590,57 @@ describe('Space', function() {
 
         itemSpace.setState({ val: 'is set' }, 'myAction');
       });
+
+      it('can reorder lists with subspaces', function() {
+        const firstItemSpace = this.space.subSpace('list').subSpace('abc12-3');
+        this.space.subSpace('list').subSpace('1234');
+        this.space.setState({
+          list: [
+            { value: 'new guy', id: '4321' },
+            { value: 'another', id: '1234' },
+            { value: 'present', id: 'abc12-3', extra: true },
+          ],
+        });
+        assert.deepEqual(this.space.state.list, [
+          { value: 'new guy', id: '4321' },
+          { value: 'another', id: '1234' },
+          { value: 'present', id: 'abc12-3', extra: true },
+        ]);
+        assert.equal(
+          firstItemSpace,
+          this.space.subSpace('list').subSpace('abc12-3')
+        );
+        assert(firstItemSpace.state.extra);
+      });
+
+      it('can reorder lists with subspaces directly', function() {
+        const firstItemSpace = this.space.subSpace('list').subSpace('abc12-3');
+        this.space.subSpace('list').subSpace('1234');
+        this.space
+          .subSpace('list')
+          .setState([
+            { value: 'new guy', id: '4321' },
+            { value: 'another', id: '1234' },
+            { value: 'present!', id: 'abc12-3', extra: true },
+          ]);
+        assert.deepEqual(this.space.state.list, [
+          { value: 'new guy', id: '4321' },
+          { value: 'another', id: '1234' },
+          { value: 'present!', id: 'abc12-3', extra: true },
+        ]);
+        assert.equal(
+          firstItemSpace,
+          this.space.subSpace('list').subSpace('abc12-3')
+        );
+        assert(firstItemSpace.state.extra);
+      });
+
+      it('cannot be updated with an object', function() {
+        assert.throws(
+          () => this.space.subSpace('list').setState({ val: true }),
+          /Array\/Object mismatch/
+        );
+      });
     });
 
     describe('children and parent subscribers', function() {
@@ -611,7 +675,10 @@ describe('Space', function() {
     });
 
     it('cannot be updated', function() {
-      assert.throws(() => this.spaceList.setState({ not: 'good' }));
+      assert.throws(
+        () => this.spaceList.setState({ not: 'good' }),
+        /Array\/Object mismatch/
+      );
     });
 
     it('can be replaced', function() {
