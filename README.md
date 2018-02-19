@@ -86,7 +86,7 @@ export default function TodoList({ space, name }) {
   );
 };
 
-// setState callbacks are given the space first, then the event.
+// bindTo callbacks are given the space first, then the event.
 // If the space is an array, the result overwrites the existing state
 function addTodo(space, e) {
   const todos = space.state;
@@ -111,14 +111,14 @@ import react from 'react';
 
 export default function Todo({ space }) {
   const todo = space.state; // The entire state from this space is the todo
-  const { setState } = space;
+  const { bindTo } = space;
   const doneClassName = todo.done ? 'done' : '';
 
   return (
     <li className="todo">
-      <input type="checkbox" checked={done} onChange={setState(toggleDone)} />
+      <input type="checkbox" checked={done} onChange={bindTo(toggleDone)} />
       <span className={doneClassName}>{todo.msg}</span>
-      <button onClick={setState(removeTodo)}>Remove Todo</button>
+      <button onClick={bindTo(removeTodo)}>Remove Todo</button>
     </li>
   );
 }
