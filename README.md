@@ -77,7 +77,7 @@ export default function TodoList({ space, name }) {
 
   return(
     <h2>{name}'s Todos:</h2>
-    <button onClick={space.setState(addTodo)}>Add Todo</button>
+    <button onClick={space.bindTo(addTodo)}>Add Todo</button>
     <ul className='todos'>
       {todos.map(todo =>
         <Todo space={space.subSpace(todo.id)} />
