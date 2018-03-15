@@ -486,6 +486,21 @@ Sort of. The state you get from a space is an immutable object. You cannot chang
 
 Due to the fact that the state is immutable, if a sub-space for an item wants to update its state, SpaceAce needs to find it in the parent space's state. The way we've solved this is to use a unique id field. It's a similar concept to React's built-in `key` prop. In fact, every space in an array that has an `id` is automatically given an identical `key` field for convenience.
 
+**How can I remove all the keys from an object in the state?**
+
+If you setState an empty object onto a key, it empties it out.
+
+e.g.
+
+```js
+space.setState({ child: { bool: true, num: 123 } });
+space.setState({ child: { num: 321 } });
+console.log(space.state.child); // { bool: true, num: 321 }
+// To empty out "child":
+space.setState({ child: {} });
+console.log(space.state.child); // {}
+```
+
 ## License
 
 MIT

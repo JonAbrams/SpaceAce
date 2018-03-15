@@ -162,6 +162,13 @@ describe('Space', function() {
       assert.equal(this.space.state.nullItem, null);
     });
 
+    it('clears an object when given an empty object', function() {
+      this.space.setState({ child: { bool: true, num: 123 } });
+      assert.deepEqual(this.space.state.child, { bool: true, num: 123 });
+      this.space.setState({ child: {} });
+      assert.deepEqual(this.space.state.child, {});
+    });
+
     it('supports regexes', function() {
       this.space.setState({ reg: /abc/ });
       assert.equal(this.space.state.reg.toString(), '/abc/');
