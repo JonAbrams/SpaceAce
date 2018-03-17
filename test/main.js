@@ -44,6 +44,7 @@ describe('Space', function() {
       'setState',
       'subSpace',
       'bindTo',
+      'applyValue',
       'replaceState',
       'setDefaultState',
     ];
@@ -270,6 +271,33 @@ describe('Space', function() {
         bound = this.space.bindTo(funcA, false);
         assert.equal(bound, this.space.bindTo(funcA, false));
       });
+    });
+  });
+
+  describe('#applyValue', function() {
+    it('assigns given value', function() {
+      this.space.applyValue('key')('val');
+      assert.equal(this.space.state.key, 'val');
+    });
+
+    it('assigns value if given an object that looks like an event', function() {
+      this.space.applyValue('key')({ target: { value: 'from_event' } });
+      assert.equal(this.space.state.key, 'from_event');
+    });
+
+    it('returns applyValueHandler', function() {
+      assert.equal(this.space.applyValue('key').name, 'applyValueHandler');
+    });
+
+    it('notifies subscribers', function() {
+      let called = false;
+      this.space.subscribe(causedBy => {
+        if (causedBy === 'initialized') return;
+        called = true;
+        assert.equal(causedBy, 'root#applyValue-key');
+      });
+      this.space.applyValue('key')('val');
+      assert(called);
     });
   });
 
