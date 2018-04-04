@@ -77,7 +77,7 @@ export default function TodoList({ space, name }) {
 
   return(
     <h2>{name}'s Todos:</h2>
-    <button onClick={space.bindTo(addTodo)}>Add Todo</button>
+    <button onClick={space.apply(addTodo)}>Add Todo</button>
     <ul className='todos'>
       {todos.map(todo =>
         <Todo space={space.subSpace(todo.id)} />
@@ -86,7 +86,7 @@ export default function TodoList({ space, name }) {
   );
 };
 
-// bindTo callbacks are given the space first, then the event.
+// apply callbacks are given the space first, then the event.
 // If the space is an array, the result overwrites the existing state
 function addTodo(space, e) {
   const todos = space.state;
@@ -111,14 +111,14 @@ import react from 'react';
 
 export default function Todo({ space }) {
   const todo = space.state; // The entire state from this space is the todo
-  const { bindTo } = space;
+  const { apply } = space;
   const doneClassName = todo.done ? 'done' : '';
 
   return (
     <li className="todo">
-      <input type="checkbox" checked={done} onChange={bindTo(toggleDone)} />
+      <input type="checkbox" checked={done} onChange={apply(toggleDone)} />
       <span className={doneClassName}>{todo.msg}</span>
-      <button onClick={bindTo(removeTodo)}>Remove Todo</button>
+      <button onClick={apply(removeTodo)}>Remove Todo</button>
     </li>
   );
 }
@@ -155,7 +155,7 @@ Every instance of `Space` consists of:
 
 * `state -> Object`: An immutable state, which can only be overwritten using an action.
 * `subSpace(subSpaceName: String) -> Space`: Spawns a child space.
-* `bindTo(eventHandler: Function) -> Function`: Wraps an event handler, passing in the space when eventually called. If object returned by eventHandler, it is recursively merged onto the space's state.
+* `apply(eventHandler: Function) -> Function`: Wraps an event handler, passing in the space when eventually called. If object returned by eventHandler, it is recursively merged onto the space's state.
 * `applyValue(keyName: String) -> Function`: Given a key name, returns a function that takes a value and sets applies it to the key on the state.
 * `setState(mergeObject: Object, [changedBy: String])`: A method for changing a space's state by doing a recursive merge.
 * `replaceState(newState: Object, [changedBy: String])`: A method for replacing a space's state.
@@ -237,7 +237,7 @@ const TodoList = ({ space: { state: todos, subSpace } }) => (
 );
 ```
 
-### bindTo
+### apply
 
 Parameters:
 
@@ -248,7 +248,7 @@ Returns:
 
 * Function (the callback bounded to the space)
 
-Wraps the given callback function and returns a new function. When the returned function is called, it calls the given callback, but with the space passed in as the first parameter. Any extra parameters given to `bindTo` are given to the callback when its called.
+Wraps the given callback function and returns a new function. When the returned function is called, it calls the given callback, but with the space passed in as the first parameter. Any extra parameters given to `apply` are given to the callback when its called.
 
 This new function can then be used as an event handler.
 
@@ -288,14 +288,14 @@ const saveTodo = function* (space, renderedAt, event) => {
     .catch(e => ({ status: 'errorSaving' }));
 };
 
-export default Todo = ({ state: todo, bindTo }) => (
+export default Todo = ({ state: todo, apply }) => (
   <div>
-    <form onSubmit={bindTo(saveTodo, new Date())}>
-      <input type="text" value={state.content} onChange={bindTo(changeTodo)} />
-      <button onClick={bindTo(toggleDone)} type="button">
+    <form onSubmit={apply(saveTodo, new Date())}>
+      <input type="text" value={state.content} onChange={apply(changeTodo)} />
+      <button onClick={apply(toggleDone)} type="button">
         {todo.done ? 'Restore' : 'Done'}
       </a>
-      <button onClick={bindTo(removeTodo)} type="button">
+      <button onClick={apply(removeTodo)} type="button">
         Remove
       </button>
       <button type="submit">
@@ -342,13 +342,13 @@ const ChooseNewTab = ({ onClick }) => {
 };
 <ChooseNewTab onClick={applyValue('currentTab')} />;
 
-// Using #bindTo instead
+// Using #apply instead
 // Notice how this is more complicated,
 // so not recommended if you can use #applyValue instead
 const chooseNew = () => {
   return { currentTab: 'new' };
 };
-<button onClick={bindTo(chooseNew)} />;
+<button onClick={apply(chooseNew)} />;
 ```
 
 ### setState
@@ -362,7 +362,7 @@ Shallow merges the given object it into the space's state. Pass in a second para
 
 If the space's state is an array, setState will throw an error. Use `replaceState` instead.
 
-Often used to apply async data to a state. Use `bindTo` to apply changes caused by the user.
+Often used to apply async data to a state. Use `apply` to apply changes caused by the user.
 
 e.g.
 
@@ -410,7 +410,7 @@ const addTodo = ({ state: todos, replaceState }) => {
 const TodoList = ({ state: todos, subSpace, bind }) => (
   <ul>
     {todos.map(todo => <Todo {...subSpace(todo.id)} />)}
-    <button onClick={bindTo(addTodo)}>Add Todo</button>
+    <button onClick={apply(addTodo)}>Add Todo</button>
   </ul>
 );
 ```
@@ -485,8 +485,8 @@ const handleSignup = async ({ state, rootSpace }, event) => {
   rootSpace.setState({ user: result.userInfo });
 };
 
-const SignupForm = ({ state, bindTo }) => (
-  <form onSubmit={bindTo(handleSignup)}>
+const SignupForm = ({ state, apply }) => (
+  <form onSubmit={apply(handleSignup)}>
     …
   </form>
 )
@@ -526,7 +526,7 @@ Hopefully that feature will come in v2!
 
 **Are spaces immutable?**
 
-Sort of. The state you get from a space is an immutable object. You cannot change it directly, if you do so you may get an error. But… you can mutate the state by using the `bindTo`, `setState`, and `replaceState` functions provided by the state's space.
+Sort of. The state you get from a space is an immutable object. You cannot change it directly, if you do so you may get an error. But… you can mutate the state by using the `apply`, `setState`, and `replaceState` functions provided by the state's space.
 
 **Why do list items need an `id` key?**
 

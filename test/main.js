@@ -43,7 +43,7 @@ describe('Space', function() {
       'rootSpace',
       'setState',
       'subSpace',
-      'bindTo',
+      'apply',
       'applyValue',
       'replaceState',
       'setDefaultState',
@@ -130,13 +130,13 @@ describe('Space', function() {
     });
   });
 
-  describe('#bindTo', function() {
+  describe('#apply', function() {
     it('updates state', function() {
       this.space.subscribe(causedBy => {
         if (causedBy === 'initialized') return;
         assert.equal(causedBy, 'root#updater');
       });
-      this.space.bindTo(function updater({ state: { count } }) {
+      this.space.apply(function updater({ state: { count } }) {
         return { count: count + 1 };
       })();
       assert.deepEqual(this.space.state, {
@@ -150,7 +150,7 @@ describe('Space', function() {
     it('actions pass in extra params', function() {
       let called = false;
       const oldState = this.space.state;
-      this.space.bindTo((space, event, additional) => {
+      this.space.apply((space, event, additional) => {
         called = event.called;
         assert.equal(additional, 'additional');
       })({ called: 'once' }, 'additional');
@@ -178,7 +178,7 @@ describe('Space', function() {
 
     it('passes through extra params on bind', function() {
       let called = false;
-      this.space.bindTo((space, id, event) => {
+      this.space.apply((space, id, event) => {
         called = event.called;
         assert.equal(id, 'abc123');
       }, 'abc123')({ called: 'once' });
@@ -186,13 +186,13 @@ describe('Space', function() {
     });
 
     it('replaces state if returned is an array', function() {
-      this.space.bindTo(() => ['val'])();
+      this.space.apply(() => ['val'])();
       assert.deepEqual(this.space.state, ['val']);
     });
 
     it('supports promise returns', async function() {
       const promise = Promise.resolve({ newItem: 'is new' });
-      this.space.bindTo(() => promise)();
+      this.space.apply(() => promise)();
       assert(!this.space.state.newItem);
       await promise;
       assert.equal(this.space.state.newItem, 'is new');
@@ -204,7 +204,7 @@ describe('Space', function() {
         if (causedBy === 'initialized') return;
         notificationCount++;
       });
-      this.space.bindTo(function* gen(space) {
+      this.space.apply(function* gen(space) {
         yield { nullItem: 'no longer null' };
         return { newItem: 'is new' };
       })();
@@ -225,7 +225,7 @@ describe('Space', function() {
         if (causedBy === 'initialized') return;
         notificationCount++;
       });
-      this.space.bindTo(function* gen(space) {
+      this.space.apply(function* gen(space) {
         promise = new Promise(resolve => {
           setTimeout(() => {
             resolve({ count: space.state.count + 1 });
@@ -256,20 +256,20 @@ describe('Space', function() {
         const funcB = function(space) {
           return { val: false };
         };
-        const bound = this.space.bindTo(funcA);
-        assert.equal(bound, this.space.bindTo(funcA));
-        assert.notEqual(bound, this.space.bindTo(funcB));
+        const bound = this.space.apply(funcA);
+        assert.equal(bound, this.space.apply(funcA));
+        assert.notEqual(bound, this.space.apply(funcB));
       });
 
       it('with stored pass-through params', function() {
         const funcA = function(space, val) {
           return { val };
         };
-        let bound = this.space.bindTo(funcA, true);
-        assert.equal(bound, this.space.bindTo(funcA, true));
-        assert.notEqual(bound, this.space.bindTo(funcA, false));
-        bound = this.space.bindTo(funcA, false);
-        assert.equal(bound, this.space.bindTo(funcA, false));
+        let bound = this.space.apply(funcA, true);
+        assert.equal(bound, this.space.apply(funcA, true));
+        assert.notEqual(bound, this.space.apply(funcA, false));
+        bound = this.space.apply(funcA, false);
+        assert.equal(bound, this.space.apply(funcA, false));
       });
     });
   });
@@ -362,13 +362,13 @@ describe('Space', function() {
       assert.equal(this.space.subscribers[0], this.subscriber);
     });
 
-    it('calls subscribers when state is changed via bindTo', function() {
+    it('calls subscribers when state is changed via apply', function() {
       assert(!this.subscriberCalled);
       this.space.subscribe(causedBy => {
         if (causedBy === 'initialized') return;
         assert.equal(this.space.state.count, 2);
       });
-      this.space.bindTo(() => ({ count: 2 }))();
+      this.space.apply(() => ({ count: 2 }))();
       assert(this.subscriberCalled);
     });
 
@@ -377,7 +377,7 @@ describe('Space', function() {
         if (causedBy === 'initialized') return;
         assert(false);
       });
-      this.space.bindTo(() => {})();
+      this.space.apply(() => {})();
     });
 
     it('sets causedBy', function() {
@@ -386,7 +386,7 @@ describe('Space', function() {
         assert.deepEqual(causedBy, 'root#myAction');
       });
 
-      this.space.bindTo(function myAction() {
+      this.space.apply(function myAction() {
         return { val: 'is set' };
       })();
     });
