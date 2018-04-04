@@ -156,7 +156,7 @@ Every instance of `Space` consists of:
 * `state -> Object`: An immutable state, which can only be overwritten using an action.
 * `subSpace(subSpaceName: String) -> Space`: Spawns a child space.
 * `apply(eventHandler: Function) -> Function`: Wraps an event handler, passing in the space when eventually called. If object returned by eventHandler, it is recursively merged onto the space's state.
-* `applyValue(keyName: String) -> Function`: Given a key name, returns a function that takes a value and sets applies it to the key on the state.
+* `update(keyName: String) -> Function`: Given a key name, returns a function that takes a value and sets it on the key on the state.
 * `setState(mergeObject: Object, [changedBy: String])`: A method for changing a space's state by doing a recursive merge.
 * `replaceState(newState: Object, [changedBy: String])`: A method for replacing a space's state.
 * `setDefaultState(mergeObject: Object)`: Sets attributes that do not exist yet on the state. Useful for initializing a sub-space's state.
@@ -306,7 +306,7 @@ export default Todo = ({ state: todo, apply }) => (
 );
 ```
 
-### applyValue
+### update
 
 Parameters:
 
@@ -325,26 +325,26 @@ If the given value is an event (i.e. has a `target` with a `value`), the event's
 e.g.
 
 ```jsx
-// #applyValue when given an event directly
+// #update when given an event directly
 // Useful for event handling built-in HTML elements
-<button onClick={applyValue('currentTab')} value="new" />;
+<button onClick={update('currentTab')} value="new" />;
 // or
-<select onChange={applyValue('currentTab')}>
+<select onChange={update('currentTab')}>
   <option value="new">New this week</option>
   <option value="archived">Archived</option>
   <option value="deleted">Deleted</option>
 </select>;
 
-// #applyValue given a value directly
+// #update given a value directly
 // Useful for custom component event handling
 const ChooseNewTab = ({ onClick }) => {
   return <button onClick={() => onClick('new')} />;
 };
-<ChooseNewTab onClick={applyValue('currentTab')} />;
+<ChooseNewTab onClick={update('currentTab')} />;
 
 // Using #apply instead
 // Notice how this is more complicated,
-// so not recommended if you can use #applyValue instead
+// so not recommended if you can use #update instead
 const chooseNew = () => {
   return { currentTab: 'new' };
 };

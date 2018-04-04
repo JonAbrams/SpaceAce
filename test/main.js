@@ -44,7 +44,7 @@ describe('Space', function() {
       'setState',
       'subSpace',
       'apply',
-      'applyValue',
+      'update',
       'replaceState',
       'setDefaultState',
     ];
@@ -274,19 +274,19 @@ describe('Space', function() {
     });
   });
 
-  describe('#applyValue', function() {
+  describe('#update', function() {
     it('assigns given value', function() {
-      this.space.applyValue('key')('val');
+      this.space.update('key')('val');
       assert.equal(this.space.state.key, 'val');
     });
 
     it('assigns value if given an object that looks like an event', function() {
-      this.space.applyValue('key')({ target: { value: 'from_event' } });
+      this.space.update('key')({ target: { value: 'from_event' } });
       assert.equal(this.space.state.key, 'from_event');
     });
 
-    it('returns applyValueHandler', function() {
-      assert.equal(this.space.applyValue('key').name, 'applyValueHandler');
+    it('returns updateHandler', function() {
+      assert.equal(this.space.update('key').name, 'updateHandler');
     });
 
     it('notifies subscribers', function() {
@@ -294,9 +294,9 @@ describe('Space', function() {
       this.space.subscribe(causedBy => {
         if (causedBy === 'initialized') return;
         called = true;
-        assert.equal(causedBy, 'root#applyValue-key');
+        assert.equal(causedBy, 'root#update-key');
       });
-      this.space.applyValue('key')('val');
+      this.space.update('key')('val');
       assert(called);
     });
   });
