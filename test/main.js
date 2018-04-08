@@ -108,6 +108,10 @@ describe('Space', function() {
         assert.strictEqual(this.newSpace.limit, 6);
         assert.strictEqual(this.oldSpace, space);
         assert.strictEqual(this.causedBy, '#incLimit');
+
+        // Again!
+        this.newSpace(incLimit)();
+        assert.strictEqual(this.newSpace.limit, 7);
       });
 
       describe('args', function() {
@@ -135,6 +139,18 @@ describe('Space', function() {
           );
           assert.strictEqual(this.newSpace.searchTerm, undefined);
           assert.strictEqual(this.newSpace.val, 'cheese');
+        });
+
+        it.skip('passes in a merge function', function() {
+          this.space(({ merge }) => {
+            const newSpace = merge({ limit: 10, searchTerm: '' });
+            assert.strictEqual(newSpace.limit, 10);
+            assert.strictEqual(newSpace.searchTerm, '');
+            return { searchTerm: 'frodo' };
+          })();
+
+          assert.strictEqual(this.newSpace.limit, 10);
+          assert.strictEqual(this.newSpace.searchTerm, 'frodo');
         });
       });
 
