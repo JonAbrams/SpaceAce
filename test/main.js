@@ -94,15 +94,12 @@ describe('Space', function() {
     });
 
     describe('actions', function() {
-      beforeEach(function() {
-        this.incLimit = function incLimit({ space }) {
-          return { limit: space.limit + 1 };
-        };
-        this.setLimit = ({ value: limit }) => ({ limit });
-      });
       it('updates the space', function() {
+        function incLimit({ space }) {
+          return { limit: space.limit + 1 };
+        }
         var space = this.space;
-        space(this.incLimit)();
+        space(incLimit)();
         // existing space doesn't change
         assert.strictEqual(space, this.space);
         assert.strictEqual(space.limit, 5);
@@ -113,25 +110,50 @@ describe('Space', function() {
         assert.strictEqual(this.causedBy, '#incLimit');
       });
 
-      it('passes in a value', function() {
-        this.space(this.setLimit)(10);
-        assert.strictEqual(this.newSpace.limit, 10);
+      describe('args', function() {
+        it('passes in a value', function() {
+          this.space(({ value }) => ({ limit: value }))(10);
+          assert.strictEqual(this.newSpace.limit, 10);
+        });
+
+        it('passes in multiple values', function() {
+          this.space(({ values }) => ({ limit: values[0] + values[1] }))(
+            10,
+            20
+          );
+          assert.strictEqual(this.newSpace.limit, 30);
+        });
+
+        it('passes in an event if present', function() {
+          this.space(({ event }) => ({ searchTerm: event.target.value }))({
+            target: { value: '' },
+          });
+          assert.strictEqual(this.newSpace.searchTerm, '');
+
+          this.space(({ event, value }) => ({ searchTerm: event, val: value }))(
+            'cheese'
+          );
+          assert.strictEqual(this.newSpace.searchTerm, undefined);
+          assert.strictEqual(this.newSpace.val, 'cheese');
+        });
       });
 
-      it('supports actions with no name', function() {
-        this.space(this.setLimit)(10);
-        assert.strictEqual(this.causedBy, '#unknown');
-      });
+      describe('action names', function() {
+        it('supports actions with no name', function() {
+          this.space(({ value }) => ({ limit: value }))(10);
+          assert.strictEqual(this.causedBy, '#unknown');
+        });
 
-      it('guesses actions names correctly', function() {
-        var decLimit = ({ space }) => ({ limit: space.limit - 1 });
-        this.space(decLimit)();
-        assert.strictEqual(this.causedBy, '#decLimit');
-      });
+        it('guesses actions names correctly', function() {
+          var decLimit = ({ space }) => ({ limit: space.limit - 1 });
+          this.space(decLimit)();
+          assert.strictEqual(this.causedBy, '#decLimit');
+        });
 
-      it('supports explicit action names', function() {
-        this.space(this.setLimit, 'setLimit')(10);
-        assert.strictEqual(this.causedBy, '#setLimit');
+        it('supports explicit action names', function() {
+          this.space(({ value }) => ({ limit: value }), 'setLimit')(10);
+          assert.strictEqual(this.causedBy, '#setLimit');
+        });
       });
     });
   });
