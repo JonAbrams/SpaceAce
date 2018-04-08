@@ -141,16 +141,26 @@ describe('Space', function() {
           assert.strictEqual(this.newSpace.val, 'cheese');
         });
 
-        it.skip('passes in a merge function', function() {
-          this.space(({ merge }) => {
+        it('passes in a merge function', function() {
+          const oldSpace = this.space;
+          this.space(({ space, merge }) => {
             const newSpace = merge({ limit: 10, searchTerm: '' });
             assert.strictEqual(newSpace.limit, 10);
             assert.strictEqual(newSpace.searchTerm, '');
+
+            merge({ newVal: true });
+
+            assert.strictEqual(space, oldSpace);
+            assert.notStrictEqual(newSpace, oldSpace);
+
+            // Supports both 'merge' and return merging
             return { searchTerm: 'frodo' };
           })();
 
-          assert.strictEqual(this.newSpace.limit, 10);
           assert.strictEqual(this.newSpace.searchTerm, 'frodo');
+          assert.strictEqual(this.newSpace.newVal, true);
+          assert.strictEqual(this.newSpace.limit, 10);
+          assert.strictEqual(this.newSpace.characters.length, 2);
         });
       });
 
