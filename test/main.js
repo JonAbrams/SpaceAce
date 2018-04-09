@@ -1,14 +1,23 @@
 /* eslint-env node, mocha */
+'use strict';
 
 const assert = require('assert');
 const Space = require('../lib/Space');
-const { subscribe, spaceToObj, isSpace } = Space;
+const { subscribe, toObj, isSpace } = Space;
 
 describe('Space', function() {
   beforeEach(function() {
     this.initialState = {
       searchTerm: 'baggins',
       limit: 5,
+      userInfo: {
+        name: 'Jon',
+        location: {
+          city: 'San Mateo',
+          state: 'CA',
+          country: 'USA',
+        },
+      },
       characters: [
         {
           name: 'Bilbo Baggins',
@@ -51,17 +60,27 @@ describe('Space', function() {
     assert.deepEqual(Object.keys(this.space), [
       'searchTerm',
       'limit',
+      'userInfo',
       'characters',
     ]);
   });
 
   it('provides expected state', function() {
-    assert.deepEqual(spaceToObj(this.space), this.initialState);
+    assert.deepEqual(toObj(this.space), this.initialState);
   });
 
   it('stringifies', function() {
     assert.equal(JSON.stringify(this.space), JSON.stringify(this.initialState));
     assert.equal(this.space.toString(), JSON.stringify(this.initialState));
+  });
+
+  it('prevents direct writing', function() {
+    assert.throws(() => {
+      this.space.searchTerm = 'sam';
+    }, TypeError);
+    assert.throws(() => {
+      this.space.newVal = 'no good!';
+    }, TypeError);
   });
 
   describe('function updating', function() {
@@ -181,6 +200,28 @@ describe('Space', function() {
           assert.strictEqual(this.causedBy, '#setLimit');
         });
       });
+    });
+  });
+
+  describe('sub-spaces', function() {
+    it('lists are subspaces', function() {
+      assert(isSpace(this.space.characters));
+    });
+
+    it('objects are subspaces', function() {
+      assert(isSpace(this.space.userInfo));
+    });
+
+    it('can be updated', function() {
+      this.space.userInfo('name')('zivi');
+      assert.strictEqual(this.newSpace.userInfo.name, 'zivi');
+      assert.strictEqual(this.causedBy, 'userInfo#set:name');
+
+      const setState = ({ value: state }) => ({ state });
+      this.newSpace.userInfo.location(setState)('CA');
+      assert.strictEqual(this.newSpace.userInfo.name, 'zivi');
+      assert.strictEqual(this.newSpace.userInfo.location.state, 'CA');
+      assert.strictEqual(this.causedBy, 'userInfo.location#setState');
     });
   });
 });
