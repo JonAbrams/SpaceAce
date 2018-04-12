@@ -224,4 +224,38 @@ describe('Space', function() {
       assert.strictEqual(this.causedBy, 'userInfo.location#setState');
     });
   });
+
+  describe('array spaces', function() {
+    it('has items that are spaces', function() {
+      assert(isSpace(this.space.characters[0]));
+    });
+
+    it('items can be updated', function() {
+      this.space.characters[0]('evil')(true);
+      assert.strictEqual(this.newSpace.characters[0].evil, true);
+    });
+
+    it('has #map', function() {
+      const characterNames = [];
+      this.space.characters.map(character =>
+        characterNames.push(character.name)
+      );
+      assert.deepEqual(characterNames, ['Bilbo Baggins', 'Frodo Baggins']);
+    });
+
+    it('has #slice', function() {
+      const [lastCharacter] = this.space.characters.slice(-1);
+      assert.strictEqual(lastCharacter.name, 'Frodo Baggins');
+    });
+
+    it('has sort', function() {
+      const sortedByMostBooks = this.space.characters.sort(
+        (a, b) => b.books.length - a.books.length
+      );
+      assert.deepEqual(sortedByMostBooks.map(c => c.name), [
+        'Frodo Baggins',
+        'Bilbo Baggins',
+      ]);
+    });
+  });
 });
