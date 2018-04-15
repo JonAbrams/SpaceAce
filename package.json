@@ -5,7 +5,7 @@
   "main": "lib/Space.js",
   "scripts": {
     "test": "mocha",
-    "lint": "eslint **/*.js"
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",

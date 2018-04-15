@@ -236,6 +236,20 @@ describe('Space', function() {
         });
       });
 
+      it('passes in the root space', function() {
+        this.space.characters[0](({ rootSpace }) => {
+          assert.strictEqual(rootSpace, this.space);
+        })();
+
+        this.space.characters(({ rootSpace }) => {
+          assert.strictEqual(rootSpace, this.space);
+        })();
+
+        this.space(({ rootSpace }) => {
+          assert.strictEqual(rootSpace, this.space);
+        })();
+      });
+
       describe('action names', function() {
         it('supports actions with no name', function() {
           this.space(({ value }) => ({ limit: value }))(10);
@@ -335,6 +349,19 @@ describe('Space', function() {
         assert.deepEqual(toObj(this.newSpace.characters), [
           { name: 'Sauron', evil: true },
         ]);
+      });
+
+      it('passes in push', function() {
+        const arwen = { name: 'Arwen', species: 'Elf', evil: false };
+        const boromir = { name: 'Boromir', species: 'Human', evil: false };
+        this.space.characters(({ push }) => {
+          push(arwen);
+          push(boromir);
+        })();
+
+        assert.strictEqual(this.newSpace.characters.length, 4);
+        assert.deepEqual(toObj(this.newSpace.characters[2]), arwen);
+        assert.deepEqual(toObj(this.newSpace.characters[3]), boromir);
       });
     });
   });
