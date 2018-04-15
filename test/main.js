@@ -83,6 +83,10 @@ describe('Space', function() {
     }, TypeError);
   });
 
+  it('is frozen (let it go!)', function() {
+    assert(Object.isFrozen(this.space));
+  });
+
   describe('class methods', function() {
     describe('.isSpace', function() {
       it('works', function() {
@@ -222,6 +226,14 @@ describe('Space', function() {
           assert.strictEqual(this.newSpace.limit, 10);
           assert.strictEqual(this.newSpace.characters.length, 2);
         });
+
+        it('shallow merges only', function() {
+          this.space(({ merge }) => {
+            merge({ userInfo: { name: 'zivi' } });
+          })();
+
+          assert.deepEqual(toObj(this.newSpace.userInfo), { name: 'zivi' });
+        });
       });
 
       describe('action names', function() {
@@ -274,6 +286,7 @@ describe('Space', function() {
     it('items can be updated', function() {
       this.space.characters[0]('evil')(true);
       assert.strictEqual(this.newSpace.characters[0].evil, true);
+      assert(isSpaceArray(this.newSpace.characters));
     });
 
     it('has #map', function() {
@@ -297,6 +310,32 @@ describe('Space', function() {
         'Frodo Baggins',
         'Bilbo Baggins',
       ]);
+    });
+
+    describe('updating', function() {
+      it('does not merge', function() {
+        assert.throws(() => {
+          this.space.characters(({ merge }) => {
+            merge({ something: 'fails' });
+          })();
+        }, /You cannot merge onto an array, try replace instead\?/);
+
+        assert.throws(() => {
+          this.space.characters(({ merge }) => {
+            return { something: 'fails' };
+          })();
+        }, /You cannot merge onto an array, try replace instead\?/);
+      });
+
+      it('has replace', function() {
+        this.space.characters(({ replace }) => {
+          replace([{ name: 'Sauron', evil: true }]);
+        })();
+
+        assert.deepEqual(toObj(this.newSpace.characters), [
+          { name: 'Sauron', evil: true },
+        ]);
+      });
     });
   });
 });

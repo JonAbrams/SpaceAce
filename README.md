@@ -144,7 +144,6 @@ Depending on what you pass as a paremeter when calling a space, different behavi
 
 * space(keyName: string): Returns a callback function that will change the specified keyname when called with a parameter. If the parameter is an _event_, the event’s target’s value will be used, and `event.preventDefault()` will automatically be called for you. Consider this _simple event handling_.
 * space(action: function): Returns a callback function that will in-turn call the given action. See the **Actions** section below for more! Consider this _advanced event handling_.
-* space(mergeObj: object): **Immediately** calls subscribers with a cloned version of the space, with _mergeObj_ recursively applied. If the space is a list, it won’t merge, it will replace.
 
 ### Actions
 
@@ -152,14 +151,16 @@ Actions are the event handlers (i.e. callbacks) that you define that get called 
 
 If you return an object within the action, it will be recursively merged onto the space, then invoke any subscribers.
 
-**Note**: It’s ok to not return something in an action, the space will remain unchanged (unless you call **replace** or **merge**).
+**Note**: If the space is a list/array, you cannot merge changes onto it. Instead use **replace** or one of the other array functions below.
 
-Each action is called with an object that has a bunch of useful stuff:
+**Note**: It’s ok to not return anything in an action, the space will remain unchanged (unless, of course, you call **replace** or **merge** somewhere in the action).
+
+Each action is called with an object that has a bunch of useful stuff values and functions:
 
 * **space** – object|array – The space that the action belongs to. Very useful for returning new values based on existing values.
 * **event** – Event|null – If a browser [event](https://developer.mozilla.org/en-US/docs/Web/API/Event) invokes this action, the event object will be passed in. Useful for [preventDefault](https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault) and getting `event.target.value`.
 * **rootSpace** – space|null – Since spaces can be children of other spaces, it’s often useful to access the top-most space.
-* **replace** – function(object|array) – Replaces the contents of the current space with the object or array you pass to it. Use only as a last resort.
+* **replace** – function(object|array) – Replaces the contents of the current space with the object or array you pass to it. Typically used with array spaces.
 * **merge** – function(object) – If the space is an object, merge the given object onto the space, recursively.
 * **push** – function(item) – If the space is an array, this adds a value to the end of it.
 * **unshift** – function(item) – If the space is an array, this adds a value to the beginning of it.
