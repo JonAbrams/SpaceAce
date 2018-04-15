@@ -3,7 +3,7 @@
 
 const assert = require('assert');
 const Space = require('../lib/Space');
-const { subscribe, toObj, isSpace } = Space;
+const { subscribe, toObj, isSpace, isSpaceArray } = Space;
 
 describe('Space', function() {
   beforeEach(function() {
@@ -81,6 +81,47 @@ describe('Space', function() {
     assert.throws(() => {
       this.space.newVal = 'no good!';
     }, TypeError);
+  });
+
+  describe('class methods', function() {
+    describe('.isSpace', function() {
+      it('works', function() {
+        assert(isSpace(this.space));
+        assert(isSpace(this.space.characters));
+        assert(isSpace(this.space.characters[0]));
+        assert(!isSpace({}));
+        assert(!isSpace());
+      });
+    });
+
+    describe('.isSpaceArray', function() {
+      it('works', function() {
+        assert(isSpaceArray(this.space.characters));
+        assert(!isSpaceArray(this.space));
+        assert(!isSpaceArray(this.space.characters[0]));
+      });
+    });
+
+    describe('.toJSON', function() {
+      it('works', function() {
+        assert.deepEqual(toObj(this.space), this.initialState);
+      });
+    });
+
+    describe('.toObj', function() {
+      it('is same as .toJSON', function() {
+        assert.strictEqual(this.space.toJSON(), toObj(this.space));
+      });
+    });
+
+    describe('.toString', function() {
+      it('stringifies toJSON', function() {
+        assert.strictEqual(
+          this.space.toString(),
+          JSON.stringify(this.space.toJSON())
+        );
+      });
+    });
   });
 
   describe('function updating', function() {
