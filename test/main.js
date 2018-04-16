@@ -326,6 +326,13 @@ describe('Space', function() {
       ]);
     });
 
+    it('has filter', function() {
+      const bilboOnly = this.space.characters.filter(
+        character => character.name === 'Bilbo Baggins'
+      );
+      assert.deepEqual(bilboOnly.map(c => c.name), ['Bilbo Baggins']);
+    });
+
     describe('updating', function() {
       it('does not merge', function() {
         assert.throws(() => {
