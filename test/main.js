@@ -364,5 +364,12 @@ describe('Space', function() {
         assert.deepEqual(toObj(this.newSpace.characters[3]), boromir);
       });
     });
+
+    describe('children', function() {
+      it('removes itself if it merges null', function() {
+        this.space.characters[0](() => null)();
+        assert.strictEqual(this.newSpace.characters.length, 1);
+      });
+    });
   });
 });
