@@ -178,7 +178,7 @@ describe('Space', function() {
         assert.strictEqual(this.newSpace.limit, 7);
       });
 
-      it.skip('supports promises', function() {
+      it('supports promises', function() {
         function incLimitPromise({ space }) {
           return Promise.resolve({ limit: space.limit + 1 });
         }
