@@ -155,6 +155,13 @@ describe('Space', function() {
         assert.strictEqual(this.oldSpace, space);
         assert.strictEqual(this.causedBy, '#set:newVal');
       });
+
+      it('provides correct causedBy for nested spaces', function() {
+        this.space.characters[0]('evil')(true);
+        assert.strictEqual(this.causedBy, 'characters[0]#set:evil');
+        this.newSpace.characters[0].books(({ replace }) => replace([]))();
+        assert.strictEqual(this.causedBy, 'characters[0].books#unknown');
+      });
     });
 
     describe('actions', function() {
