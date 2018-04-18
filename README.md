@@ -68,7 +68,7 @@ export default function App({ space }) {
 
 /*
   – Actions are given an object containing the space, and (if provided) an event object.
-  – If the space is an array, it’s also given push, splice, and unshift!
+  – If the space is an array, it’s also given push, remove, and unshift!
 */
 function addTodo({ push, event }) {
   event.preventDefault();
@@ -164,7 +164,7 @@ Each action is called with an object that has a bunch of useful stuff values and
 * **merge** – function(object) – If the space is an object, merge the given object onto the space, recursively.
 * **push** – function(item) – If the space is an array, this adds a value to the end of it.
 * **unshift** – function(item) – If the space is an array, this adds a value to the beginning of it.
-* **splice** – function(start[, deleteCount[, item1[, item2[, …]]]]) – It the space is an array, remove item specified at the _start_ index. _deleteCount_ is the number of items to be removed, default is 1. Optionally provide new items to be added at _start_. Behaves the same array [Array.prototype.splice](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)
+* **remove** – function(function(item, index)) – Calls the given function with each item in the list. For any call that returns a truthy value, that item is removed from the array.
 
 ## FAQ
 

@@ -305,14 +305,16 @@ describe('Space', function() {
 
     it('has #map', function() {
       const characterNames = [];
-      this.space.characters.map(character =>
+      const mapped = this.space.characters.map(character =>
         characterNames.push(character.name)
       );
+      assert(isSpace(mapped));
       assert.deepEqual(characterNames, ['Bilbo Baggins', 'Frodo Baggins']);
     });
 
     it('has #slice', function() {
-      const [lastCharacter] = this.space.characters.slice(-1);
+      debugger;
+      const [lastCharacter] = toObj(this.space.characters.slice(-1));
       assert.strictEqual(lastCharacter.name, 'Frodo Baggins');
     });
 
@@ -330,7 +332,7 @@ describe('Space', function() {
       const bilboOnly = this.space.characters.filter(
         character => character.name === 'Bilbo Baggins'
       );
-      assert.deepEqual(bilboOnly.map(c => c.name), ['Bilbo Baggins']);
+      assert.deepEqual(toObj(bilboOnly.map(c => c.name)), ['Bilbo Baggins']);
     });
 
     describe('updating', function() {
@@ -369,6 +371,23 @@ describe('Space', function() {
         assert.strictEqual(this.newSpace.characters.length, 4);
         assert.deepEqual(toObj(this.newSpace.characters[2]), arwen);
         assert.deepEqual(toObj(this.newSpace.characters[3]), boromir);
+      });
+
+      it('passing remove', function() {
+        this.space.characters(({ push }) =>
+          push({ name: 'Sauron', evil: true })
+        )();
+        assert.strictEqual(
+          this.newSpace.characters.filter(item => item.evil).length,
+          1
+        );
+        this.newSpace.characters(function removeAllEvil({ remove }) {
+          remove(character => character.evil);
+        })();
+        assert.strictEqual(
+          this.newSpace.characters.filter(item => item.evil).length,
+          0
+        );
       });
     });
 
