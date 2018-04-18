@@ -305,16 +305,14 @@ describe('Space', function() {
 
     it('has #map', function() {
       const characterNames = [];
-      const mapped = this.space.characters.map(character =>
+      this.space.characters.map(character =>
         characterNames.push(character.name)
       );
-      assert(isSpace(mapped));
       assert.deepEqual(characterNames, ['Bilbo Baggins', 'Frodo Baggins']);
     });
 
     it('has #slice', function() {
-      debugger;
-      const [lastCharacter] = toObj(this.space.characters.slice(-1));
+      const [lastCharacter] = this.space.characters.slice(-1);
       assert.strictEqual(lastCharacter.name, 'Frodo Baggins');
     });
 
@@ -332,7 +330,7 @@ describe('Space', function() {
       const bilboOnly = this.space.characters.filter(
         character => character.name === 'Bilbo Baggins'
       );
-      assert.deepEqual(toObj(bilboOnly.map(c => c.name)), ['Bilbo Baggins']);
+      assert.deepEqual(bilboOnly.map(c => c.name), ['Bilbo Baggins']);
     });
 
     describe('updating', function() {
