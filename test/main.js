@@ -178,6 +178,17 @@ describe('Space', function() {
         assert.strictEqual(this.newSpace.limit, 7);
       });
 
+      it.skip('supports promises', function() {
+        function incLimitPromise({ space }) {
+          return Promise.resolve({ limit: space.limit + 1 });
+        }
+
+        return this.space(incLimitPromise)().then(newSpace => {
+          assert.strictEqual(this.newSpace, newSpace);
+          assert.strictEqual(newSpace.limit, 6);
+        });
+      });
+
       describe('args', function() {
         it('passes in a value', function() {
           this.space(({ value }) => ({ limit: value }))(10);
@@ -371,7 +382,20 @@ describe('Space', function() {
         assert.deepEqual(toObj(this.newSpace.characters[3]), boromir);
       });
 
-      it('passing remove', function() {
+      it('passes in unshift', function() {
+        const arwen = { name: 'Arwen', species: 'Elf', evil: false };
+        const boromir = { name: 'Boromir', species: 'Human', evil: false };
+        this.space.characters(({ unshift }) => {
+          unshift(arwen);
+          unshift(boromir);
+        })();
+
+        assert.strictEqual(this.newSpace.characters.length, 4);
+        assert.deepEqual(toObj(this.newSpace.characters[0]), boromir);
+        assert.deepEqual(toObj(this.newSpace.characters[1]), arwen);
+      });
+
+      it('passes in remove', function() {
         this.space.characters(({ push }) =>
           push({ name: 'Sauron', evil: true })
         )();
