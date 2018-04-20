@@ -17,8 +17,9 @@ Any and all [feedback is welcome](https://twitter.com/JonathanAbrams)!
 * **Immutable** – Centralized state with easy to track changes.
 * **Modular** – Every object/array in the space is also automatically a space too.
 * **No Boilerplate** – Declare actions within the same file as your view components.
-* **Convenient API** – “Create” sub-spaces and bind actions to events within your render functions.
-* **Framework Agnostic** – Designed with React in mind, but works with any stateless view library/framework.
+* **Auto-actions** – If you just need to set a value on the state when an event occurs, SpaceAce makes it easy to declare an action write in your render method.
+* **Convenience APIs** – Spaces that are arrays have popular methods like `map`, `slice`, and `filter`. Class methods allow you to get the root space of any space, so you don’t need to pass everything down.
+* **Framework Agnostic** – Designed with React in mind, but works with any stateless view library/framework. Has no external dependencies. Requires only ES5.
 
 ## Example Usage
 
@@ -161,7 +162,7 @@ Each action is called with an object that has a bunch of useful stuff values and
 * **event** – Event|null – If a browser [event](https://developer.mozilla.org/en-US/docs/Web/API/Event) invokes this action, the event object will be passed in. Useful for [preventDefault](https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault) and getting `event.target.value`.
 * **rootSpace** – space|null – Since spaces can be children of other spaces, it’s often useful to access the top-most space.
 * **replace** – function(object|array) – Replaces the contents of the current space with the object or array you pass to it. Typically used with array spaces.
-* **merge** – function(object) – If the space is an object, merge the given object onto the space, recursively.
+* **merge** – function(object) – If the space is an object, copies each property from the passed in object onto the space.
 * **push** – function(item) – If the space is an array, this adds a value to the end of it.
 * **unshift** – function(item) – If the space is an array, this adds a value to the beginning of it.
 * **remove** – function(function(item, index)) – Calls the given function with each item in the list. For any call that returns a truthy value, that item is removed from the array.

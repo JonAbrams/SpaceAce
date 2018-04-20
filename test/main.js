@@ -162,6 +162,32 @@ describe('Space', function() {
         this.newSpace.characters[0].books(({ replace }) => replace([]))();
         assert.strictEqual(this.causedBy, 'characters[0].books#unknown');
       });
+
+      it('applies values from events', function() {
+        this.space('searchTerm')({ target: { value: 'frodo' } });
+        assert.strictEqual(this.causedBy, '#set:searchTerm');
+        assert.strictEqual(this.newSpace.searchTerm, 'frodo');
+      });
+
+      it('casts booleans from events', function() {
+        this.space.characters[0]('evil')({
+          target: { checked: true, type: 'checkbox', value: 'ignore' },
+        });
+        assert.strictEqual(this.causedBy, 'characters[0]#set:evil');
+        assert.strictEqual(this.newSpace.characters[0].evil, true);
+
+        this.newSpace.characters[0]('evil')({
+          target: { checked: false, type: 'checkbox' },
+        });
+        assert.strictEqual(this.causedBy, 'characters[0]#set:evil');
+        assert.strictEqual(this.newSpace.characters[0].evil, false);
+      });
+
+      it('casts number from events', function() {
+        this.space('limit')({ target: { value: '10', type: 'number' } });
+        assert.strictEqual(this.causedBy, '#set:limit');
+        assert.strictEqual(this.newSpace.limit, 10);
+      });
     });
 
     describe('actions', function() {
