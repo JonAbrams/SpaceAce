@@ -3,7 +3,7 @@
 
 const assert = require('assert');
 const Space = require('../lib/Space');
-const { subscribe, toObj, isSpace, isSpaceArray } = Space;
+const { subscribe, toObj, isSpace, isSpaceArray, rootOf } = Space;
 
 describe('Space', function() {
   beforeEach(function() {
@@ -89,7 +89,7 @@ describe('Space', function() {
 
   describe('class methods', function() {
     describe('.isSpace', function() {
-      it('works', function() {
+      it('identifies spaces', function() {
         assert(isSpace(this.space));
         assert(isSpace(this.space.characters));
         assert(isSpace(this.space.characters[0]));
@@ -99,10 +99,22 @@ describe('Space', function() {
     });
 
     describe('.isSpaceArray', function() {
-      it('works', function() {
+      it('identifies spaces that contain arrays', function() {
         assert(isSpaceArray(this.space.characters));
         assert(!isSpaceArray(this.space));
         assert(!isSpaceArray(this.space.characters[0]));
+      });
+    });
+
+    describe('.rootOf', function() {
+      it('returns the root space', function() {
+        assert.strictEqual(rootOf(this.space.characters[0]), this.space);
+      });
+
+      it('throws when given non-space', function() {
+        assert.throws(() => {
+          rootOf({});
+        });
       });
     });
 
