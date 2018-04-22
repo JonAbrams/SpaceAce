@@ -140,6 +140,18 @@ describe('Space', function() {
     });
   });
 
+  describe('direct updating', function() {
+    it('returns new space', function() {
+      const newSpace = this.space({ limit: 6 });
+      assert.notStrictEqual(newSpace, this.space);
+    });
+
+    it('merges values', function() {
+      this.space({ limit: 6 });
+      assert.strictEqual(this.newSpace.limit, 6);
+      assert(this.newSpace.userInfo);
+    });
+  });
   describe('function updating', function() {
     describe('key setter', function() {
       it('updates single keys with a value', function() {
