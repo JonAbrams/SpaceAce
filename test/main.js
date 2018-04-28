@@ -236,13 +236,18 @@ describe('Space', function() {
       });
 
       it('supports promises', function() {
-        function incLimitPromise({ space }) {
+        function incLimitPromise({ space, merge }) {
+          merge({ searchTerm: '' });
           return Promise.resolve({ limit: space.limit + 1 });
         }
 
         return this.space(incLimitPromise)().then(newSpace => {
           assert.strictEqual(this.newSpace, newSpace);
           assert.strictEqual(newSpace.limit, 6);
+          assert.strictEqual(newSpace.searchTerm, '');
+
+          // Subscibers called at end of action, and when promise resolved
+          assert.strictEqual(this.numCalls, 2);
         });
       });
 
@@ -316,6 +321,14 @@ describe('Space', function() {
         this.space(({ rootSpace }) => {
           assert.strictEqual(rootSpace, this.space);
         })();
+      });
+
+      it('does’t notify until end', function() {
+        this.space(({ merge }) => {
+          merge({ limit: 10 });
+          assert.strictEqual(this.newSpace, null);
+        })();
+        assert.strictEqual(this.newSpace.limit, 10);
       });
 
       describe('action names', function() {
@@ -419,6 +432,7 @@ describe('Space', function() {
       it('has replace', function() {
         this.space.characters(({ replace }) => {
           replace([{ name: 'Sauron', evil: true }]);
+          assert.strictEqual(this.newSpace, null);
         })();
 
         assert.deepEqual(toObj(this.newSpace.characters), [
@@ -432,6 +446,7 @@ describe('Space', function() {
         this.space.characters(({ push }) => {
           push(arwen);
           push(boromir);
+          assert.strictEqual(this.newSpace, null);
         })();
 
         assert.strictEqual(this.newSpace.characters.length, 4);
@@ -445,6 +460,7 @@ describe('Space', function() {
         this.space.characters(({ unshift }) => {
           unshift(arwen);
           unshift(boromir);
+          assert.strictEqual(this.newSpace, null);
         })();
 
         assert.strictEqual(this.newSpace.characters.length, 4);
@@ -460,8 +476,10 @@ describe('Space', function() {
           this.newSpace.characters.filter(item => item.evil).length,
           1
         );
-        this.newSpace.characters(function removeAllEvil({ remove }) {
+        const unchanged = this.newSpace;
+        this.newSpace.characters(({ remove }) => {
           remove(character => character.evil);
+          assert.strictEqual(this.newSpace, unchanged);
         })();
         assert.strictEqual(
           this.newSpace.characters.filter(item => item.evil).length,
