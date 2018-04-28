@@ -21,7 +21,31 @@ Any and all [feedback is welcome](https://twitter.com/JonathanAbrams)!
 * **Convenience APIs** – Spaces that are arrays have popular methods like `map`, `slice`, and `filter`. Class methods allow you to get the root space of any space, so you don’t need to pass everything down.
 * **Framework Agnostic** – Designed with React in mind, but works with any stateless view library/framework. Has no external dependencies. Requires only ES5.
 
-## Example Usage
+## Documentation
+
+1. [Simple Example](#simple-example)
+2. [What is a space?](#what-is-a-space)
+   a. [Space basics](#space-basic)
+   b. [Creating a space](#creating-a-space)
+   c. [Sub-spaces](#sub-spaces)
+3. [Updating spaces](#updating-spaces)
+   a. [Quick actions](#quick-actions)
+   b. [Custom actions](#custom-actions)
+   c. [Action params](#action-params)
+4. [Class methods](#class-methods)
+   a. [.subscribe](#subscribe)
+   b. [.isSpace](#isspace)
+   c. [.isSpaceArray](#isspacearray)
+   d. [.toObj](#toobj)
+   e. [.rootOf](#rootof)
+5. [Instance methods](#instance-methods)
+   a. [toJSON](#tojson)
+   a. [slice](#slice)
+   a. [map](#map)
+   a. [filter](#filter)
+   a. [sort](#sort)
+
+## Simple Example
 
 SpaceAce can be used with any front-end view library (such as Vue and Angular), but the examples below are done with React.
 
@@ -42,11 +66,16 @@ subscribe(space, ({ newState, oldState, causedBy }) => {
   // Example `causedBy`s:
   // 'todoList#addTodo', 'todos[akd4a1plj]#toggleDone'
   console.log(`Re-render of <Container /> caused by ${causedBy}`);
+  renderApp(space);
+});
+renderApp(space); // initial render
+
+function renderApp(space) {
   ReactDOM.render(
     <App space={space} />,
     document.getElementById('react-container')
   );
-});
+}
 ```
 
 **App.js**
@@ -113,8 +142,6 @@ function removeTodo({ event }) {
 }
 ```
 
-## Documentation
-
 ### What is a Space?
 
 `Space` is the default "class" provided by the `spaceace` npm package.
@@ -125,17 +152,11 @@ Making a new instance of `Space` returns an object/function. You can access stat
 
 Returns a new space with its state defined by the passed in `initialState`.
 
-Optionally pass in an object as a second parameter to change the default behaviour of the space, and any of its sub-spaces.
-
 e.g.
 
 ```javascript
 const rootSpace = new Space({ initialState: true, todos: [] });
 ```
-
-**Options**
-
-`skipInitialNotification` - Boolean – Default: false – If true, does not invoke subscribers immediately when they’re added.
 
 ### Calling spaces (to change them!)
 
