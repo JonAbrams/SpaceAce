@@ -257,6 +257,14 @@ describe('Space', function() {
           assert.strictEqual(this.newSpace.limit, 10);
         });
 
+        it('updates the space as it goes', function() {
+          this.space(params => {
+            params.merge({ limit: 10 });
+            assert.strictEqual(params.space.limit, 10);
+          })();
+          assert.strictEqual(this.numCalls, 1);
+        });
+
         it('passes in multiple values', function() {
           this.space(({ values }) => ({ limit: values[0] + values[1] }))(
             10,
