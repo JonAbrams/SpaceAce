@@ -320,7 +320,7 @@ Useful for events that need to change the state.
 
 Given the name of a key on the state, returns a function that assigns any given value to that key.
 
-If the given value is an event (i.e. has a `target` with a `value`), the event's value is extracted and used instead.
+If the given value is an event (i.e. has a `target` with a `value`), the event's value is applied instead. If the event's type is `checkbox`, then the target's `checked` value is applied. If the event's type is `number`, the value is converted to a number before being applied.
 
 e.g.
 

@@ -285,6 +285,24 @@ describe('Space', function() {
       assert.equal(this.space.state.key, 'from_event');
     });
 
+    it('assigns boolean value if given a checkbox event', function() {
+      this.space.applyValue('key')({
+        target: { type: 'checkbox', checked: true },
+      });
+      assert.equal(this.space.state.key, true);
+      this.space.applyValue('key')({
+        target: { type: 'checkbox', checked: false },
+      });
+      assert.equal(this.space.state.key, false);
+    });
+
+    it('assigns integer value if given a number event', function() {
+      this.space.applyValue('key')({
+        target: { type: 'number', value: -123 },
+      });
+      assert.equal(this.space.state.key, -123);
+    });
+
     it('returns applyValueHandler', function() {
       assert.equal(this.space.applyValue('key').name, 'applyValueHandler');
     });
