@@ -166,6 +166,7 @@ Depending on what you pass as a paremeter when calling a space, different behavi
 
 * space(keyName: string): Returns a callback function that will change the specified keyname when called with a parameter. If the parameter is an _event_, the event’s target’s value will be used, and `event.preventDefault()` will automatically be called for you. Consider this _simple event handling_.
 * space(action: function): Returns a callback function that will in-turn call the given action. See the **Actions** section below for more! Consider this _advanced event handling_.
+* space(mergeObj: object): Returns a new space with the given `mergeObj` shallowly merged onto the space, and notifies any subscribers of the change.
 
 ### Actions
 
