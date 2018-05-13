@@ -236,6 +236,7 @@ Available on array spaces and object spaces:
 * **values** — array — When the wrapped function is called, this is an array of all the parameters.
 * **rootSpace** – space|null – Since spaces can be children of other spaces, it’s often useful to access the top-most space.
 * **replace** – function(object|array) – Replaces the contents of the current space with the object or array you pass to it. Typically used with array spaces.
+* **getSpace** — function – Returns the latest version of the space that this action was called on. Use inside of promises.
 
 Available on object spaces only:
 

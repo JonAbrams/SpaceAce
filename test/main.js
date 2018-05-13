@@ -253,14 +253,6 @@ describe('Space', function() {
           assert.strictEqual(this.newSpace.limit, 10);
         });
 
-        it('updates the space as it goes', function() {
-          this.space(params => {
-            params.merge({ limit: 10 });
-            assert.strictEqual(params.space.limit, 10);
-          })();
-          assert.strictEqual(this.numCalls, 1);
-        });
-
         it('passes in multiple values', function() {
           this.space(({ values, merge }) =>
             merge({ limit: values[0] + values[1] })
@@ -333,6 +325,21 @@ describe('Space', function() {
           assert.strictEqual(this.newSpace, null);
         })();
         assert.strictEqual(this.newSpace.limit, 10);
+      });
+
+      it('provides getSpace', function() {
+        return this.space(({ space, merge, getSpace }) => {
+          merge({ limit: space.limit + 1 });
+
+          return Promise.resolve().then(() => {
+            merge({ limit: getSpace().limit + 1 });
+            assert.strictEqual(space.limit, 5);
+            assert.strictEqual(getSpace().limit, 7);
+            assert.strictEqual(this.newSpace.limit, 6);
+          });
+        })().then(() => {
+          assert.strictEqual(this.newSpace.limit, 7);
+        });
       });
 
       describe('action names', function() {
