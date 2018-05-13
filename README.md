@@ -253,6 +253,10 @@ If you return a promise in a custom action, subscribers will be notified multipl
 
 **Note**: After an `await`, the `space` that's passed in at the top of the action may be out of date, it's recommended that you use `getSpace()` to get the latest version of the space after an `await` (or inside a `then` callback).
 
+### Self-Destruct
+
+If you return `null` in a custom action, and the space is an item in an array, it will be removed from the array.
+
 ## Utility Functions
 
 ### subscribe
