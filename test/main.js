@@ -3,7 +3,7 @@
 
 const assert = require('assert');
 const Space = require('../lib/Space');
-const { subscribe, toObj, isSpace, isSpaceArray, rootOf } = Space;
+const { subscribe, isSpace, isSpaceArray, rootOf } = Space;
 
 describe('Space', function() {
   beforeEach(function() {
@@ -66,7 +66,7 @@ describe('Space', function() {
   });
 
   it('provides expected state', function() {
-    assert.deepEqual(toObj(this.space), this.initialState);
+    assert.deepEqual(this.space.toJSON(), this.initialState);
   });
 
   it('stringifies', function() {
@@ -120,13 +120,7 @@ describe('Space', function() {
 
     describe('.toJSON', function() {
       it('works', function() {
-        assert.deepEqual(toObj(this.space), this.initialState);
-      });
-    });
-
-    describe('.toObj', function() {
-      it('is same as .toJSON', function() {
-        assert.strictEqual(this.space.toJSON(), toObj(this.space));
+        assert.deepEqual(this.space.toJSON(), this.initialState);
       });
     });
 
@@ -313,7 +307,7 @@ describe('Space', function() {
             merge({ userInfo: { name: 'zivi' } });
           })();
 
-          assert.deepEqual(toObj(this.newSpace.userInfo), { name: 'zivi' });
+          assert.deepEqual(this.newSpace.userInfo.toJSON(), { name: 'zivi' });
         });
       });
 
@@ -443,7 +437,7 @@ describe('Space', function() {
           assert.strictEqual(this.newSpace, null);
         })();
 
-        assert.deepEqual(toObj(this.newSpace.characters), [
+        assert.deepEqual(this.newSpace.characters.toJSON(), [
           { name: 'Sauron', evil: true },
         ]);
       });
@@ -458,8 +452,8 @@ describe('Space', function() {
         })();
 
         assert.strictEqual(this.newSpace.characters.length, 4);
-        assert.deepEqual(toObj(this.newSpace.characters[2]), arwen);
-        assert.deepEqual(toObj(this.newSpace.characters[3]), boromir);
+        assert.deepEqual(this.newSpace.characters[2].toJSON(), arwen);
+        assert.deepEqual(this.newSpace.characters[3].toJSON(), boromir);
       });
 
       it('passes in unshift', function() {
@@ -472,8 +466,8 @@ describe('Space', function() {
         })();
 
         assert.strictEqual(this.newSpace.characters.length, 4);
-        assert.deepEqual(toObj(this.newSpace.characters[0]), boromir);
-        assert.deepEqual(toObj(this.newSpace.characters[1]), arwen);
+        assert.deepEqual(this.newSpace.characters[0].toJSON(), boromir);
+        assert.deepEqual(this.newSpace.characters[1].toJSON(), arwen);
       });
 
       it('passes in remove', function() {
