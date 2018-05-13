@@ -210,8 +210,8 @@ describe('Space', function() {
 
     describe('actions', function() {
       it('updates the space', function() {
-        function incLimit({ space }) {
-          return { limit: space.limit + 1 };
+        function incLimit({ space, merge }) {
+          merge({ limit: space.limit + 1 });
         }
         var space = this.space;
         space(incLimit)();
@@ -232,7 +232,9 @@ describe('Space', function() {
       it('supports promises', function() {
         function incLimitPromise({ space, merge }) {
           merge({ searchTerm: '' });
-          return Promise.resolve({ limit: space.limit + 1 });
+          return Promise.resolve().then(() => {
+            merge({ limit: space.limit + 1 });
+          });
         }
 
         return this.space(incLimitPromise)().then(newSpace => {
@@ -247,7 +249,7 @@ describe('Space', function() {
 
       describe('args', function() {
         it('passes in a value', function() {
-          this.space(({ value }) => ({ limit: value }))(10);
+          this.space(({ value, merge }) => merge({ limit: value }))(10);
           assert.strictEqual(this.newSpace.limit, 10);
         });
 
@@ -260,22 +262,23 @@ describe('Space', function() {
         });
 
         it('passes in multiple values', function() {
-          this.space(({ values }) => ({ limit: values[0] + values[1] }))(
-            10,
-            20
-          );
+          this.space(({ values, merge }) =>
+            merge({ limit: values[0] + values[1] })
+          )(10, 20);
           assert.strictEqual(this.newSpace.limit, 30);
         });
 
         it('passes in an event if present', function() {
-          this.space(({ event }) => ({ searchTerm: event.target.value }))({
+          this.space(({ event, merge }) =>
+            merge({ searchTerm: event.target.value })
+          )({
             target: { value: '' },
           });
           assert.strictEqual(this.newSpace.searchTerm, '');
 
-          this.space(({ event, value }) => ({ searchTerm: event, val: value }))(
-            'cheese'
-          );
+          this.space(({ event, value, merge }) =>
+            merge({ searchTerm: event, val: value })
+          )('cheese');
           assert.strictEqual(this.newSpace.searchTerm, undefined);
           assert.strictEqual(this.newSpace.val, 'cheese');
         });
@@ -292,8 +295,7 @@ describe('Space', function() {
             assert.strictEqual(space, oldSpace);
             assert.notStrictEqual(newSpace, oldSpace);
 
-            // Supports both 'merge' and return merging
-            return { searchTerm: 'frodo' };
+            merge({ searchTerm: 'frodo' });
           })();
 
           assert.strictEqual(this.newSpace.searchTerm, 'frodo');
@@ -335,18 +337,21 @@ describe('Space', function() {
 
       describe('action names', function() {
         it('supports actions with no name', function() {
-          this.space(({ value }) => ({ limit: value }))(10);
+          this.space(({ value, merge }) => merge({ limit: value }))(10);
           assert.strictEqual(this.causedBy, '#unknown');
         });
 
         it('guesses actions names correctly', function() {
-          var decLimit = ({ space }) => ({ limit: space.limit - 1 });
+          var decLimit = ({ space, merge }) =>
+            merge({ limit: space.limit - 1 });
           this.space(decLimit)();
           assert.strictEqual(this.causedBy, '#decLimit');
         });
 
         it('supports explicit action names', function() {
-          this.space(({ value }) => ({ limit: value }), 'setLimit')(10);
+          this.space(({ value, merge }) => merge({ limit: value }), 'setLimit')(
+            10
+          );
           assert.strictEqual(this.causedBy, '#setLimit');
         });
       });
@@ -367,7 +372,7 @@ describe('Space', function() {
       assert.strictEqual(this.newSpace.userInfo.name, 'zivi');
       assert.strictEqual(this.causedBy, 'userInfo#set:name');
 
-      const setState = ({ value: state }) => ({ state });
+      const setState = ({ value: state, merge }) => merge({ state });
       this.newSpace.userInfo.location(setState)('CA');
       assert.strictEqual(this.newSpace.userInfo.name, 'zivi');
       assert.strictEqual(this.newSpace.userInfo.location.state, 'CA');
@@ -425,9 +430,7 @@ describe('Space', function() {
         }, /You cannot merge onto an array, try replace instead\?/);
 
         assert.throws(() => {
-          this.space.characters(({ merge }) => {
-            return { something: 'fails' };
-          })();
+          this.space.characters(({ merge }) => merge({ something: 'fails' }))();
         }, /You cannot merge onto an array, try replace instead\?/);
       });
 

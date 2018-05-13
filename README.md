@@ -16,7 +16,7 @@ Any and all [feedback is welcome](https://twitter.com/JonathanAbrams)!
 
 * **Immutable** – Centralized state with easy to track changes.
 * **Modular** – View components can manage their own part of the state, update logic is not centralized.
-* **Convenience** – Various methods and features to make your life as a developer easier.
+* **Conveniet** – Various methods and features to make your life as a developer easier.
 * **Framework Agnostic** – Designed with React in mind, but works with any stateless view library/framework. Has no external dependencies. Requires only ES-
 
 ## Documentation
@@ -228,7 +228,7 @@ You can change a space as much as you like in a single action, but subscribers w
 
 [Named params](http://exploringjs.com/es6/ch_parameter-handling.html#sec_named-parameters) passed to custom actions.
 
-Array Spaces and Object Spaces:
+Available on array spaces and object spaces:
 
 * **space** – object|array – The space that the action belongs to. Very useful for applying new values based on existing values.
 * **event** – Event|null – If a browser [event](https://developer.mozilla.org/en-US/docs/Web/API/Event) invokes this action, the event object will be passed in. Useful for calling [preventDefault](https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault).
@@ -237,11 +237,11 @@ Array Spaces and Object Spaces:
 * **rootSpace** – space|null – Since spaces can be children of other spaces, it’s often useful to access the top-most space.
 * **replace** – function(object|array) – Replaces the contents of the current space with the object or array you pass to it. Typically used with array spaces.
 
-Object Spaces Only:
+Available on object spaces only:
 
 * **merge** – function(object) – Copies each property from the passed in object onto the space. Note: This is a non-recursive merge.
 
-Array Spaces Only:
+Available on array spaces only:
 
 * **push** – function(item) – If the space is an array, this adds a value to the end of it.
 * **unshift** – function(item) – If the space is an array, this adds a value to the beginning of it.
