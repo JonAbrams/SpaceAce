@@ -1,6 +1,6 @@
 {
-  "name": "spaceace",
-  "version": "0.30.0",
+  "name": "spaceace-neo",
+  "version": "1.0.0",
   "description": "A fancy immutable storage library for JavaScript",
   "main": "lib/Space.js",
   "scripts": {
