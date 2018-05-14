@@ -17,7 +17,8 @@ Any and all [feedback is welcome](https://twitter.com/JonathanAbrams)!
 * **Immutable** – Centralized state with easy to track changes.
 * **Modular** – View components can manage their own part of the state, update logic is not centralized.
 * **Conveniet** – Various methods and features to make your life as a developer easier.
-* **Framework Agnostic** – Designed with React in mind, but works with any stateless view library/framework. Has no external dependencies. Requires only ES-
+* **Framework Agnostic** – Designed with React in mind, but works with any stateless view library/framework. Has no external dependencies. Requires only ES5.
+* **Small** – ~9K uncompressed, ~2.5K gzipped.
 
 ## Documentation
 
