@@ -4,8 +4,7 @@
   "description": "A fancy immutable storage library for JavaScript",
   "main": "lib/Space.js",
   "scripts": {
-    "test": "mocha",
-    "lint": "eslint ."
+    "test": "eslint . && mocha"
   },
   "repository": {
     "type": "git",
@@ -20,7 +19,7 @@
   "homepage": "https://github.com/JonAbrams/SpaceAce#readme",
   "devDependencies": {
     "babel-eslint": "^8.0.3",
-    "eslint": "^4.13.1",
+    "eslint": "^4.19.1",
     "eslint-config-prettier": "^2.9.0",
     "eslint-config-standard": "^10.2.1",
     "eslint-plugin-import": "^2.8.0",
@@ -28,10 +27,8 @@
     "eslint-plugin-prettier": "^2.4.0",
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
-    "mocha": "^3.5.3",
-    "prettier": "^1.9.2",
-    "source-map-support": "^0.5.0",
-    "webpack": "^3.10.0"
+    "mocha": "^5.2.0",
+    "prettier": "^1.9.2"
   },
   "dependencies": {},
   "prettier": {
