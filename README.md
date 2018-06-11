@@ -70,11 +70,13 @@ renderApp(space); // initial render
 Since most changes to your application's state is caused by user interactions, it's very easy to bind _actions_ to events:
 
 ```jsx
-const clearName = ({ merge, event }) => {
+const clearName = ({ merge }, event) => {
+  // The first parameter is an object with the space and methods for changing it
+  // Treat these as "named param"
+  // The rest of the parameters are whatever was eventually passed to the
+  // wrapped function.
   event.preventDefault();
   merge({ name: '' });
-  // Object spaces also have these named params available:
-  // `space`, `value`, `values`, `replace`, and `rootSpace`
 };
 
 const ClearButton = space => (
@@ -85,18 +87,19 @@ const ClearButton = space => (
 You'll find that most actions just take in a value (or a value from an event) and apply it to a particular attribute, SpaceAce provides a shortcut, just give the name of the attribute that needs updating:
 
 ```jsx
+// 'name' is a string, so `space` knows to apply the event's value onto
+// the corresponding attribute in `space`
 const NameField = space => <input value={space.name} onChange={space('name')} />;
 )
 ```
 
-If a space has any objects or arrays as children, they're automatically turned into spaces. This allows them to easily be passed into components. If a child space gets updated, all parent spaces are notified. This allows components to manage their own spaces, but for the application's root space to still see and access everything.
+If a space has any objects or arrays as children, they're automatically turned into spaces. This allows them to easily be passed into components. If a child space gets updated, all parent spaces are notified. This allows components to manage their own spaces, but for the application's root space to still see and access everything, refreshing views when necessary.
 
 ```js
-const addTodo = ({ push }) => {
-  // Array spaces also have these named params available:
-  // `space`, `value`, `values`, `event`,
-  // `remove`, `unshift`, `replace`, and `rootSpace`
-  push({ done: false, content: '' });
+const addTodo = ({ push }, content) => {
+  // In addition to `push`, array spaces also have these functions available:
+  // `remove`, `unshift`, `replace`
+  push({ done: false, content });
 };
 space.todos(addTodo)('Destroy ring');
 ```
@@ -151,7 +154,7 @@ export default function App({ space }) {
   );
 }
 
-const addTodo = ({ push, event }) => {
+const addTodo = ({ push }, event) => {
   event.preventDefault();
 
   push({ content: 'A new TODO', done: false });
@@ -162,18 +165,20 @@ const addTodo = ({ push, event }) => {
 
 ```jsx
 // You can rename the space to something more meaningful
-// It's recommended that the prop still be called `space`, so you
-// know what it can do
+// It's recommended that the prop still be called `space`, so when working on
+// the parent you know to this component a space
 export default const Todo = ({ space: todo }) => {
   const doneClassName = todo.done ? 'done' : '';
 
   return (
     <li>
-      <input type="checkbox" checked={todo.done} onChange={todo(toggleDone)} />
-      {/* todo('msg') returns a function that updates the 'msg' attribute on the
-      todo space! */}
-      <input value={todo.content} onChange={todo('content')} />
-      <button onClick={todo(removeTodo)}>Remove Todo</button>
+      <form onSubmit={todo(saveTodo)}>
+        <input type="checkbox" checked={todo.done} onChange={todo(toggleDone)} />
+        {/* todo('msg') returns a function that updates the 'msg' attribute on the
+        todo space! */}
+        <input value={todo.content} onChange={todo('content')} />
+        <button disabled={todo.saving}>Save</button>
+      </form>
     </li>
   );
 };
@@ -181,13 +186,14 @@ export default const Todo = ({ space: todo }) => {
 // In this case, only the `done` attribute is changed on the todo
 const toggleDone = ({ space, merge }) => merge({ done: !space.done });
 
-const removeTodo = ({ event }) => {
-  event.preventDefault(); // Not needed in this case, here for demonstration
+const saveTodo = async ({ space, merge }, event) => {
+  event.preventDefault();
 
-  // Returning null causes the space to be removed from its parent!
-  // Very handy for spaces that are in a list, like this todo is.
-  // Note: If you don't call `return` in an action, the space isn’t touched!
-  return null;
+  merge({ saving: true });
+
+  await fetch('/api/todos', { method: 'POST', body: space.toJSON() });
+
+  merge({ saving: false });
 };
 ```
 
@@ -206,7 +212,11 @@ const newSpace = space({ name: 'Bilbo' }); // { name: 'Bilbo', race: 'hobbit' }
 
 ### Quick Actions (string)
 
-Returns a callback function that will change the specified attribute when called. If the parameter is an _event_, the event’s target’s value will be used, and `event.preventDefault()` will automatically be called. Very useful for `input`, `select`, and `button` elements. If the event's target is of `type="number"`, it will be cast to a number. If the event's target is a checkbox, it use the _checked_ value instead.
+Returns a callback function that will change the specified attribute when called. If the parameter is an _event_, the event’s target’s value will be used, and `event.preventDefault()` will automatically be called. Very useful for `input`, `select`, and `button` elements.
+
+If the event's origin is of `type="number"`, the value will be of type `number`.
+
+If the event's origin is a checkbox, the value is taken from the _checked_ property instead, which is a boolean.
 
 ```jsx
 export default const Todo = ({ space: todo }) => {
@@ -221,7 +231,7 @@ export default const Todo = ({ space: todo }) => {
 
 ### Custom Actions (function)
 
-A custom action is a function that is passed to a space. It returns a wrapped function, when that is called, the action is called with a bunch of named parameters, they differ depending on whether the space represents an object or an array.
+A custom action is a function that is passed to a space. It returns a wrapped function. When the wrapped function is called, the action is called with a bunch of named parameters (as the first actual parameter), they differ depending on whether the space represents an object or an array. The rest of the parameters are whatever is passed to the wrapped function whenever it's called.
 
 You can change a space as much as you like in a single action, but subscribers won't be notified until the action is done.
 
@@ -231,17 +241,14 @@ You can change a space as much as you like in a single action, but subscribers w
 
 Available on array spaces and object spaces:
 
-* **space** – object|array – The space that the action belongs to. Very useful for applying new values based on existing values.
-* **event** – Event|null – If a browser [event](https://developer.mozilla.org/en-US/docs/Web/API/Event) invokes this action, the event object will be passed in. Useful for calling [preventDefault](https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault).
-* **value** — anything — When the wrapped function is called, this is the first parameter.
-* **values** — array — When the wrapped function is called, this is an array of all the parameters.
-* **rootSpace** – space|null – Since spaces can be children of other spaces, it’s often useful to access the top-most space.
+* **space** – space – The space that the action belongs to. Very useful for applying new values based on existing values.
+* **rootSpace** – space – Since spaces can be children of other spaces, it’s often useful to access the top-most space.
 * **replace** – function(object|array) – Replaces the contents of the current space with the object or array you pass to it. Typically used with array spaces.
-* **getSpace** — function – Returns the latest version of the space that this action was called on. Use inside of promises.
+* **getSpace** — function – Returns the latest version of the space that this action was called on. Use inside of promises or any async callback!
 
 Available on object spaces only:
 
-* **merge** – function(object) – Copies each property from the passed in object onto the space. Note: This is a non-recursive merge.
+* **merge** – function(object) – Copies each property from the passed in object onto the space. This is a non-recursive (aka shallow) merge.
 
 Available on array spaces only:
 
@@ -253,11 +260,7 @@ Available on array spaces only:
 
 If you return a promise in a custom action, subscribers will be notified multiple times: At the initial return, and when a promise is done being resolved. This means that custom actions can use `async/await`, and changes to the state will appear in your app whenever you call `await`.
 
-**Note**: After an `await`, the `space` that's passed in at the top of the action may be out of date, it's recommended that you use `getSpace()` to get the latest version of the space after an `await` (or inside a `then` callback).
-
-### Self-Destruct
-
-If you return `null` in a custom action, and the space is an item in an array, it will be removed from the array.
+**Note**: After an `await`, the `space` (and `rootSpace`) that's passed in at the top of the action may be out of date, it's recommended that you use `getSpace()` to get the latest version of the space after an `await` (or inside a callback). If you need the latest rootSpace, do: `rootOf(getSpace())`
 
 ## Utility Functions
 
@@ -275,7 +278,7 @@ The subscriber function is called with the following named params:
 * **causedBy**: A string container which part of the space triggered the change, and the name of the action responsible.
 
 ```js
-import Space, { subscribe, toObj } from 'spaceace';
+import Space, { subscribe } from 'spaceace';
 
 const space = new Space({});
 

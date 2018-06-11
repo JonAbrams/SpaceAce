@@ -1,6 +1,6 @@
 {
   "name": "spaceace-neo",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A fancy immutable storage library for JavaScript",
   "main": "lib/Space.js",
   "scripts": {
@@ -10,7 +10,12 @@
     "type": "git",
     "url": "git+https://github.com/JonAbrams/SpaceAce.git"
   },
-  "keywords": ["flux", "react", "redux", "store"],
+  "keywords": [
+    "flux",
+    "react",
+    "redux",
+    "store"
+  ],
   "author": "Jon Abrams <jon@jonabrams.com>",
   "license": "MIT",
   "bugs": {

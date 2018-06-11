@@ -249,26 +249,27 @@ describe('Space', function() {
 
       describe('args', function() {
         it('passes in a value', function() {
-          this.space(({ value, merge }) => merge({ limit: value }))(10);
+          this.space(({ merge }, value) => merge({ limit: value }))(10);
           assert.strictEqual(this.newSpace.limit, 10);
         });
 
         it('passes in multiple values', function() {
-          this.space(({ values, merge }) =>
-            merge({ limit: values[0] + values[1] })
-          )(10, 20);
+          this.space(({ merge }, val1, val2) => merge({ limit: val1 + val2 }))(
+            10,
+            20
+          );
           assert.strictEqual(this.newSpace.limit, 30);
         });
 
         it('passes in an event if present', function() {
-          this.space(({ event, merge }) =>
+          this.space(({ merge }, event) =>
             merge({ searchTerm: event.target.value })
           )({
             target: { value: '' },
           });
           assert.strictEqual(this.newSpace.searchTerm, '');
 
-          this.space(({ event, value, merge }) =>
+          this.space(({ event, merge }, value) =>
             merge({ searchTerm: event, val: value })
           )('cheese');
           assert.strictEqual(this.newSpace.searchTerm, undefined);
@@ -379,7 +380,7 @@ describe('Space', function() {
       assert.strictEqual(this.newSpace.userInfo.name, 'zivi');
       assert.strictEqual(this.causedBy, 'userInfo#set:name');
 
-      const setState = ({ value: state, merge }) => merge({ state });
+      const setState = ({ merge }, state) => merge({ state });
       this.newSpace.userInfo.location(setState)('CA');
       assert.strictEqual(this.newSpace.userInfo.name, 'zivi');
       assert.strictEqual(this.newSpace.userInfo.location.state, 'CA');
