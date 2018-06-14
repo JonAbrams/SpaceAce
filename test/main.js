@@ -1,756 +1,510 @@
 /* eslint-env node, mocha */
+'use strict';
 
 const assert = require('assert');
 const Space = require('../lib/Space');
+const { subscribe, isSpace, isSpaceArray, rootOf } = Space;
 
 describe('Space', function() {
   beforeEach(function() {
-    this.space = new Space({
-      initialState: 'here',
-      count: 1,
-      child: {},
-      nullItem: null,
-    });
-  });
-
-  it('returns Space instance', function() {
-    assert(new Space() instanceof Space);
-  });
-
-  it('instance is frozen', function() {
-    assert(Object.isFrozen(this.space.state));
-  });
-
-  it('calls subscriber on subscribing', function() {
-    const space = new Space();
-    space.subscribe(causedBy => {
-      assert.deepEqual(causedBy, 'initialized');
-    });
-  });
-
-  describe('with skipInitialNotification', function() {
-    it('does not call subscriber on subscribing', function() {
-      const space = new Space({}, { skipInitialNotification: true });
-      space.subscribe(causedBy => {
-        assert.equal(1, 2);
-      });
-    });
-  });
-
-  it('spaces only have these enumerated keys', function() {
-    const publicMethods = [
-      'state',
-      'rootSpace',
-      'setState',
-      'subSpace',
-      'bindTo',
-      'applyValue',
-      'replaceState',
-      'setDefaultState',
-    ];
-    const childSpace = this.space.subSpace('child');
-    assert.deepEqual(Object.keys(this.space), publicMethods);
-    assert.deepEqual(Object.keys(childSpace), publicMethods);
-  });
-
-  it('has initial state', function() {
-    assert.deepEqual(this.space.state, {
-      initialState: 'here',
-      count: 1,
-      child: {},
-      nullItem: null,
-    });
-  });
-
-  it('does not regenerate state on each get', function() {
-    assert.equal(this.space.state, this.space.state);
-  });
-
-  describe('#setState', function() {
-    it('updates the state', function() {
-      this.space.subscribe(causedBy => {
-        if (causedBy === 'initialized') return;
-        assert.equal(causedBy, 'root#unknown');
-      });
-      this.space.setState({ count: 42, initialState: null });
-      assert.deepEqual(this.space.state, {
-        initialState: null,
-        count: 42,
-        nullItem: null,
-        child: {},
-      });
-    });
-
-    it('recursively merges onto sub-spaces and objects', function() {
-      const childSpace = this.space.subSpace('child');
-      childSpace.setState({ val: true });
-      this.space.setState({ objChild: { val: 123 } });
-
-      this.space.setState({
-        count: 2,
-        child: { otherVal: 'abc' },
-        objChild: {
-          otherVal: 321,
+    this.initialState = {
+      searchTerm: 'baggins',
+      limit: 5,
+      userInfo: {
+        name: 'Jon',
+        location: {
+          city: 'San Mateo',
+          state: 'CA',
+          country: 'USA',
         },
-      });
-
-      assert.deepEqual(this.space.state, {
-        initialState: 'here',
-        count: 2,
-        nullItem: null,
-        child: { val: true, otherVal: 'abc' },
-        objChild: { val: 123, otherVal: 321 },
-      });
-    });
-
-    it('can specify action name', function() {
-      this.space.subscribe(causedBy => {
-        if (causedBy === 'initialized') return;
-        assert.equal(causedBy, 'root#customName');
-      });
-      this.space.setState({ val: true }, 'customName');
-      assert.deepEqual(this.space.state, {
-        initialState: 'here',
-        count: 1,
-        nullItem: null,
-        child: {},
-        val: true,
-      });
-    });
-
-    it('throws when given a function', function() {
-      assert.throws(() => {
-        this.space.setState(() => {});
-      });
-    });
-
-    it('does not alter primitive values', function() {
-      this.space.setState({ arr: ['string'] });
-      assert.equal(this.space.state.arr[0], 'string');
-    });
-  });
-
-  describe('#bindTo', function() {
-    it('updates state', function() {
-      this.space.subscribe(causedBy => {
-        if (causedBy === 'initialized') return;
-        assert.equal(causedBy, 'root#updater');
-      });
-      this.space.bindTo(function updater({ state: { count } }) {
-        return { count: count + 1 };
-      })();
-      assert.deepEqual(this.space.state, {
-        initialState: 'here',
-        count: 2,
-        child: {},
-        nullItem: null,
-      });
-    });
-
-    it('actions pass in extra params', function() {
-      let called = false;
-      const oldState = this.space.state;
-      this.space.bindTo((space, event, additional) => {
-        called = event.called;
-        assert.equal(additional, 'additional');
-      })({ called: 'once' }, 'additional');
-      assert.equal(called, 'once');
-      assert.equal(this.space.state, oldState);
-    });
-
-    it('can overwrite existing null values', function() {
-      this.space.setState({ nullItem: null });
-      assert.equal(this.space.state.nullItem, null);
-    });
-
-    it('clears an object when given an empty object', function() {
-      this.space.setState({ child: { bool: true, num: 123 } });
-      assert.deepEqual(this.space.state.child, { bool: true, num: 123 });
-      this.space.setState({ child: {} });
-      assert.deepEqual(this.space.state.child, {});
-    });
-
-    it('supports regexes', function() {
-      this.space.setState({ reg: /abc/ });
-      assert.equal(this.space.state.reg.toString(), '/abc/');
-      assert(this.space.state.reg instanceof RegExp);
-    });
-
-    it('passes through extra params on bind', function() {
-      let called = false;
-      this.space.bindTo((space, id, event) => {
-        called = event.called;
-        assert.equal(id, 'abc123');
-      }, 'abc123')({ called: 'once' });
-      assert.equal(called, 'once', 'additional');
-    });
-
-    it('replaces state if returned is an array', function() {
-      this.space.bindTo(() => ['val'])();
-      assert.deepEqual(this.space.state, ['val']);
-    });
-
-    it('supports promise returns', async function() {
-      const promise = Promise.resolve({ newItem: 'is new' });
-      this.space.bindTo(() => promise)();
-      assert(!this.space.state.newItem);
-      await promise;
-      assert.equal(this.space.state.newItem, 'is new');
-    });
-
-    it('supports generators', function() {
-      let notificationCount = 0;
-      this.space.subscribe(causedBy => {
-        if (causedBy === 'initialized') return;
-        notificationCount++;
-      });
-      this.space.bindTo(function* gen(space) {
-        yield { nullItem: 'no longer null' };
-        return { newItem: 'is new' };
-      })();
-      assert.deepEqual(this.space.state, {
-        initialState: 'here',
-        count: 1,
-        child: {},
-        nullItem: 'no longer null',
-        newItem: 'is new',
-      });
-      assert.equal(notificationCount, 2);
-    });
-
-    it('supports yielded promises', async function() {
-      let promise;
-      let notificationCount = 0;
-      this.space.subscribe(causedBy => {
-        if (causedBy === 'initialized') return;
-        notificationCount++;
-      });
-      this.space.bindTo(function* gen(space) {
-        promise = new Promise(resolve => {
-          setTimeout(() => {
-            resolve({ count: space.state.count + 1 });
-          }, 0);
-        });
-        yield { yielded: true, count: 2 };
-        yield promise;
-        return { count: 5 };
-      })();
-      assert.deepEqual(this.space.state, {
-        initialState: 'here',
-        count: 5,
-        child: {},
-        nullItem: null,
-        yielded: true,
-      });
-      assert.equal(notificationCount, 2);
-      await promise;
-      assert.equal(this.space.state.count, 6);
-      assert.equal(notificationCount, 3);
-    });
-
-    describe('memoization', function() {
-      it('lone function', function() {
-        const funcA = function(space) {
-          return { val: true };
-        };
-        const funcB = function(space) {
-          return { val: false };
-        };
-        const bound = this.space.bindTo(funcA);
-        assert.equal(bound, this.space.bindTo(funcA));
-        assert.notEqual(bound, this.space.bindTo(funcB));
-      });
-
-      it('with stored pass-through params', function() {
-        const funcA = function(space, val) {
-          return { val };
-        };
-        let bound = this.space.bindTo(funcA, true);
-        assert.equal(bound, this.space.bindTo(funcA, true));
-        assert.notEqual(bound, this.space.bindTo(funcA, false));
-        bound = this.space.bindTo(funcA, false);
-        assert.equal(bound, this.space.bindTo(funcA, false));
-      });
-    });
-  });
-
-  describe('#applyValue', function() {
-    it('assigns given value', function() {
-      this.space.applyValue('key')('val');
-      assert.equal(this.space.state.key, 'val');
-    });
-
-    it('assigns value if given an object that looks like an event', function() {
-      this.space.applyValue('key')({ target: { value: 'from_event' } });
-      assert.equal(this.space.state.key, 'from_event');
-    });
-
-    it('assigns boolean value if given a checkbox event', function() {
-      this.space.applyValue('key')({
-        target: { type: 'checkbox', checked: true },
-      });
-      assert.equal(this.space.state.key, true);
-      this.space.applyValue('key')({
-        target: { type: 'checkbox', checked: false },
-      });
-      assert.equal(this.space.state.key, false);
-    });
-
-    it('assigns integer value if given a number event', function() {
-      this.space.applyValue('key')({
-        target: { type: 'number', value: -123 },
-      });
-      assert.equal(this.space.state.key, -123);
-    });
-
-    it('returns applyValueHandler', function() {
-      assert.equal(this.space.applyValue('key').name, 'applyValueHandler');
-    });
-
-    it('notifies subscribers', function() {
-      let called = false;
-      this.space.subscribe(causedBy => {
-        if (causedBy === 'initialized') return;
-        called = true;
-        assert.equal(causedBy, 'root#applyValue-key');
-      });
-      this.space.applyValue('key')('val');
-      assert(called);
-    });
-  });
-
-  describe('#replaceState', function() {
-    it('replaces the state', function() {
-      let called = false;
-      this.space.subscribe(causedBy => {
-        if (causedBy === 'initialized') return;
-        called = true;
-        assert.equal(causedBy, 'root#replacer');
-      });
-      this.space.replaceState({ abc: 123 }, 'replacer');
-      assert.deepEqual(this.space.state, { abc: 123 });
-      assert(called);
-    });
-  });
-
-  describe('#setDefaultState', function() {
-    it('only overwrites undefined attributes', function() {
-      let called = false;
-      this.space.subscribe(function(causedBy) {
-        if (causedBy === 'initialized') return;
-        called = true;
-        assert.equal(causedBy, 'root#setDefaultState');
-      });
-      this.space.setDefaultState({
-        initialState: 'changed?',
-        newKey: 'is added',
-      });
-      assert.deepEqual(this.space.state, {
-        initialState: 'here',
-        count: 1,
-        child: {},
-        nullItem: null,
-        newKey: 'is added',
-      });
-      assert(called);
-    });
-  });
-
-  describe('#toJSON', function() {
-    it('returns state as JSON string', function() {
-      assert.deepEqual(this.space.toJSON(), { state: this.space.state });
-      assert.equal(
-        JSON.stringify(this.space),
-        JSON.stringify({ state: this.space.state })
-      );
-    });
-  });
-
-  describe('subscribers', function() {
-    beforeEach(function() {
-      this.subscriberCalled = false;
-      this.subscriber = causedBy => {
-        if (causedBy === 'initialized') return;
-        this.subscriberCalled = true;
-      };
-      this.space.subscribe(this.subscriber);
-    });
-
-    it('registers subscribers', function() {
-      assert.equal(this.space.subscribers[0], this.subscriber);
-    });
-
-    it('calls subscribers when state is changed via bindTo', function() {
-      assert(!this.subscriberCalled);
-      this.space.subscribe(causedBy => {
-        if (causedBy === 'initialized') return;
-        assert.equal(this.space.state.count, 2);
-      });
-      this.space.bindTo(() => ({ count: 2 }))();
-      assert(this.subscriberCalled);
-    });
-
-    it('does NOT call subscribers when no value is returned', function() {
-      this.space.subscribe(causedBy => {
-        if (causedBy === 'initialized') return;
-        assert(false);
-      });
-      this.space.bindTo(() => {})();
-    });
-
-    it('sets causedBy', function() {
-      this.space.subscribe(causedBy => {
-        if (causedBy === 'initialized') return;
-        assert.deepEqual(causedBy, 'root#myAction');
-      });
-
-      this.space.bindTo(function myAction() {
-        return { val: 'is set' };
-      })();
-    });
-
-    it('unsubscribes', function() {
-      const unsubscribe = this.space.subscribe(causedBy => {
-        if (causedBy === 'initialized') return;
-        throw new Error('This should not be called!');
-      });
-      unsubscribe();
-      this.space.setState({ changed: true });
-    });
-  });
-
-  describe('child spaces', function() {
-    beforeEach(function() {
-      this.subSpaceByName = this.space.subSpace('child');
-      this.space.setState({
-        otherChild: { value: 'present' },
-      });
-    });
-
-    it('propagates changes upwards', function() {
-      this.subSpaceByName.setState({ value: 'is there' });
-      assert.equal(this.space.state.child.value, 'is there');
-    });
-
-    it('uses existing sub space', function() {
-      assert.equal(this.space.subSpace('child'), this.subSpaceByName);
-    });
-
-    it('does not touch child state if child is unaffected', function() {
-      const oldState = this.subSpaceByName.state;
-      // Parent changed
-      this.space.setState({ change: true });
-      assert.equal(oldState, this.subSpaceByName.state);
-      // Sibling changed
-      this.space.subSpace('otherChild').setState({ value: null });
-      assert.equal(oldState, this.subSpaceByName.state);
-      // Self changed
-      this.space.setState({ child: { changed: true } });
-      assert.notEqual(oldState, this.subSpaceByName.state);
-    });
-
-    it('subSpacing sets initial state to empty object', function() {
-      // undefined
-      assert.deepEqual(this.space.subSpace('missingChild').state, {});
-
-      // null
-      assert.deepEqual(this.space.subSpace('nullItem').state, {});
-    });
-
-    it('subSpacing throws when given invalid type as state', function() {
-      this.space.setState({ primitive: 'a string', date: new Date() });
-      assert.throws(() => {
-        this.space.subSpace('primitive');
-      }, /Cannot attach sub-space to primitive with type string/);
-
-      assert.throws(() => {
-        this.space.subSpace('date');
-      }, /Cannot attach sub-space to date with type Date/);
-    });
-
-    it('can fetch root space', function() {
-      this.subSpaceByName.setState({ gc: {} });
-      const grandChild = this.subSpaceByName.subSpace('gc');
-      assert.equal(this.subSpaceByName.rootSpace, this.space);
-      assert.equal(grandChild.rootSpace, this.space);
-    });
-
-    it('can update children', function() {
-      const childOne = this.space.subSpace('childOne');
-      const childTwo = this.space.subSpace('childTwo');
-      const gChild = childTwo.subSpace('gChild');
-      assert.deepEqual(childOne.state, {});
-      assert.deepEqual(childTwo.state, {});
-      this.space.setState({
-        childOne: { val: 'abc' },
-        childTwo: { val: '123', gChild: { val: 'xyz' } },
-      });
-      assert.equal(childOne.state.val, 'abc');
-      assert.equal(childTwo.state.val, '123');
-      assert.equal(gChild.state.val, 'xyz');
-    });
-
-    it('can update siblings', function() {
-      this.subSpaceByName.rootSpace.setState({
-        otherChild: {
-          addedValue: 'present',
+      },
+      characters: [
+        {
+          name: 'Bilbo Baggins',
+          species: 'Hobbit',
+          evil: false,
+          books: ['The Hobbit', 'Fellowship of the Ring'],
         },
-      });
-      assert.equal(
-        this.space.subSpace('otherChild').state.addedValue,
-        'present'
-      );
-    });
-
-    it('can update nephews', function() {
-      this.space.subSpace('otherChild').setState({ otherChildChild: {} });
-      const deepSpace = this.space
-        .subSpace('otherChild')
-        .subSpace('otherChildChild');
-
-      this.space
-        .subSpace('otherChild')
-        .subSpace('otherChildChild')
-        .setState({
-          value: 'starting',
-        });
-
-      let subscriberCalled = 0;
-      this.space.subscribe(causedBy => {
-        if (causedBy === 'initialized') return;
-        assert.equal(causedBy, 'root#unknown');
-        subscriberCalled += 1;
-      });
-
-      this.subSpaceByName.rootSpace.setState({
-        otherChild: {
-          otherChildChild: {
-            addedValue: 'present',
-          },
-        },
-      });
-
-      assert.equal(subscriberCalled, 1);
-
-      assert.deepEqual(deepSpace.state, {
-        addedValue: 'present',
-        value: 'starting',
-      });
-    });
-
-    it('old copy of state renders attached grandchild spaces correctly', function() {
-      const space = new Space({ child: { grandChild: { val: true } } });
-      const oldState = space.state;
-      assert.deepEqual(oldState.child.grandChild, { val: true });
-      space.subSpace('child').subSpace('grandChild');
-      assert.deepEqual(oldState.child.grandChild, { val: true });
-    });
-
-    describe('child spaces in lists', function() {
-      beforeEach(function() {
-        this.space.setState({
-          list: [
-            { value: 'present', id: 'abc12-3' },
-            { value: 'another', id: '1234' },
+        {
+          name: 'Frodo Baggins',
+          species: 'Hobbit',
+          evil: false,
+          books: [
+            'Fellowship of the Ring',
+            'The Two Towers',
+            'The Return of the King',
           ],
+        },
+      ],
+    };
+    this.space = new Space(this.initialState);
+
+    this.numCalls = 0;
+    this.newSpace = null;
+    this.oldSpace = null;
+    this.causedBy = null;
+    subscribe(this.space, ({ newSpace, oldSpace, causedBy }) => {
+      this.numCalls++;
+      this.newSpace = newSpace;
+      this.oldSpace = oldSpace;
+      this.causedBy = causedBy;
+    });
+  });
+
+  it('is a function AND a space', function() {
+    assert.strictEqual(typeof this.space, 'function');
+    assert(isSpace(this.space));
+  });
+
+  it('provides expected enumerated keys', function() {
+    assert.deepEqual(Object.keys(this.space), [
+      'searchTerm',
+      'limit',
+      'userInfo',
+      'characters',
+    ]);
+  });
+
+  it('provides expected state', function() {
+    assert.deepEqual(this.space.toJSON(), this.initialState);
+  });
+
+  it('stringifies', function() {
+    assert.equal(JSON.stringify(this.space), JSON.stringify(this.initialState));
+    assert.equal(this.space.toString(), JSON.stringify(this.initialState));
+  });
+
+  it('prevents direct writing', function() {
+    assert.throws(() => {
+      this.space.searchTerm = 'sam';
+    }, TypeError);
+    assert.throws(() => {
+      this.space.newVal = 'no good!';
+    }, TypeError);
+  });
+
+  it('is frozen (let it go!)', function() {
+    assert(Object.isFrozen(this.space));
+  });
+
+  describe('class methods', function() {
+    describe('.isSpace', function() {
+      it('identifies spaces', function() {
+        assert(isSpace(this.space));
+        assert(isSpace(this.space.characters));
+        assert(isSpace(this.space.characters[0]));
+        assert(!isSpace({}));
+        assert(!isSpace());
+      });
+    });
+
+    describe('.isSpaceArray', function() {
+      it('identifies spaces that contain arrays', function() {
+        assert(isSpaceArray(this.space.characters));
+        assert(!isSpaceArray(this.space));
+        assert(!isSpaceArray(this.space.characters[0]));
+      });
+    });
+
+    describe('.rootOf', function() {
+      it('returns the root space', function() {
+        assert.strictEqual(rootOf(this.space.characters[0]), this.space);
+      });
+
+      it('throws when given non-space', function() {
+        assert.throws(() => {
+          rootOf({});
+        });
+      });
+    });
+
+    describe('.toJSON', function() {
+      it('works', function() {
+        assert.deepEqual(this.space.toJSON(), this.initialState);
+      });
+    });
+
+    describe('.toString', function() {
+      it('stringifies toJSON', function() {
+        assert.strictEqual(
+          this.space.toString(),
+          JSON.stringify(this.space.toJSON())
+        );
+      });
+    });
+  });
+
+  describe('direct updating', function() {
+    it('returns new space', function() {
+      const newSpace = this.space({ limit: 6 });
+      assert.notStrictEqual(newSpace, this.space);
+    });
+
+    it('merges values', function() {
+      this.space({ limit: 6 });
+      assert.strictEqual(this.newSpace.limit, 6);
+      assert(this.newSpace.userInfo);
+    });
+  });
+  describe('function updating', function() {
+    describe('key setter', function() {
+      it('updates single keys with a value', function() {
+        var space = this.space;
+        assert.strictEqual(typeof space('limit'), 'function');
+        space('limit')(6);
+        // existing space doesn't change
+        assert.strictEqual(space, this.space);
+        // correct values given to subscribers
+        assert.notStrictEqual(this.newSpace, space);
+        assert.strictEqual(this.newSpace.limit, 6);
+        assert.strictEqual(this.oldSpace, space);
+        assert.strictEqual(this.causedBy, '#set:limit');
+      });
+
+      it('adds single keys with a value', function() {
+        var space = this.space;
+        assert.strictEqual(space.newVal, undefined);
+        space('newVal')(true);
+        // existing space doesn't change
+        assert.strictEqual(space, this.space);
+        // correct values given to subscribers
+        assert.notStrictEqual(this.newSpace, space);
+        assert.strictEqual(this.newSpace.newVal, true);
+        assert.strictEqual(this.oldSpace, space);
+        assert.strictEqual(this.causedBy, '#set:newVal');
+      });
+
+      it('provides correct causedBy for nested spaces', function() {
+        this.space.characters[0]('evil')(true);
+        assert.strictEqual(this.causedBy, 'characters[0]#set:evil');
+        this.newSpace.characters[0].books(({ replace }) => replace([]))();
+        assert.strictEqual(this.causedBy, 'characters[0].books#unknown');
+      });
+
+      it('applies values from events', function() {
+        this.space('searchTerm')({ target: { value: 'frodo' } });
+        assert.strictEqual(this.causedBy, '#set:searchTerm');
+        assert.strictEqual(this.newSpace.searchTerm, 'frodo');
+      });
+
+      it('casts booleans from events', function() {
+        this.space.characters[0]('evil')({
+          target: { checked: true, type: 'checkbox', value: 'ignore' },
+        });
+        assert.strictEqual(this.causedBy, 'characters[0]#set:evil');
+        assert.strictEqual(this.newSpace.characters[0].evil, true);
+
+        this.newSpace.characters[0]('evil')({
+          target: { checked: false, type: 'checkbox' },
+        });
+        assert.strictEqual(this.causedBy, 'characters[0]#set:evil');
+        assert.strictEqual(this.newSpace.characters[0].evil, false);
+      });
+
+      it('casts number from events', function() {
+        this.space('limit')({ target: { value: '10', type: 'number' } });
+        assert.strictEqual(this.causedBy, '#set:limit');
+        assert.strictEqual(this.newSpace.limit, 10);
+      });
+    });
+
+    describe('actions', function() {
+      it('updates the space', function() {
+        function incLimit({ space, merge }) {
+          merge({ limit: space.limit + 1 });
+        }
+        var space = this.space;
+        space(incLimit)();
+        // existing space doesn't change
+        assert.strictEqual(space, this.space);
+        assert.strictEqual(space.limit, 5);
+        // correct values given to subscribers
+        assert.notStrictEqual(this.newSpace, space);
+        assert.strictEqual(this.newSpace.limit, 6);
+        assert.strictEqual(this.oldSpace, space);
+        assert.strictEqual(this.causedBy, '#incLimit');
+
+        // Again!
+        this.newSpace(incLimit)();
+        assert.strictEqual(this.newSpace.limit, 7);
+      });
+
+      it('supports promises', function() {
+        function incLimitPromise({ space, merge }) {
+          merge({ searchTerm: '' });
+          return Promise.resolve().then(() => {
+            merge({ limit: space.limit + 1 });
+          });
+        }
+
+        return this.space(incLimitPromise)().then(newSpace => {
+          assert.strictEqual(this.newSpace, newSpace);
+          assert.strictEqual(newSpace.limit, 6);
+          assert.strictEqual(newSpace.searchTerm, '');
+
+          // Subscibers called at end of action, and when promise resolved
+          assert.strictEqual(this.numCalls, 2);
         });
       });
 
-      describe('list spaces', function() {
-        beforeEach(function() {
-          this.listSpace = new Space([{ id: 123, val: 'abc' }]);
+      describe('args', function() {
+        it('passes in a value', function() {
+          this.space(({ merge }, value) => merge({ limit: value }))(10);
+          assert.strictEqual(this.newSpace.limit, 10);
         });
 
-        it('can get child subSpaces', function() {
-          assert(this.listSpace.subSpace('123') instanceof Space);
-          assert.equal(this.listSpace.subSpace('123').state.val, 'abc');
-        });
-
-        it('throws when id not found', function() {
-          assert.throws(
-            () => this.listSpace.subSpace('321'),
-            /Could not find item with id 321 in root/
+        it('passes in multiple values', function() {
+          this.space(({ merge }, val1, val2) => merge({ limit: val1 + val2 }))(
+            10,
+            20
           );
+          assert.strictEqual(this.newSpace.limit, 30);
         });
 
-        it('preserves list item spaces', function() {
-          const itemSpace = this.listSpace.subSpace('123');
-          this.listSpace.setState([
-            { id: '321', val: 'cba' },
-            { id: '123', val: 'ABC' },
-          ]);
-          assert.deepEqual(this.listSpace.state, [
-            { id: '321', val: 'cba' },
-            { id: '123', val: 'ABC' },
-          ]);
-          assert.equal(itemSpace, this.listSpace.subSpace('123'));
+        it('passes in an event if present', function() {
+          this.space(({ merge }, event) =>
+            merge({ searchTerm: event.target.value })
+          )({
+            target: { value: '' },
+          });
+          assert.strictEqual(this.newSpace.searchTerm, '');
+
+          this.space(({ event, merge }, value) =>
+            merge({ searchTerm: event, val: value })
+          )('cheese');
+          assert.strictEqual(this.newSpace.searchTerm, undefined);
+          assert.strictEqual(this.newSpace.val, 'cheese');
+        });
+
+        it('passes in a merge function', function() {
+          const oldSpace = this.space;
+          this.space(({ space, merge }) => {
+            const newSpace = merge({ limit: 10, searchTerm: '' });
+            assert.strictEqual(newSpace.limit, 10);
+            assert.strictEqual(newSpace.searchTerm, '');
+
+            merge({ newVal: true });
+
+            assert.strictEqual(space, oldSpace);
+            assert.notStrictEqual(newSpace, oldSpace);
+
+            merge({ searchTerm: 'frodo' });
+          })();
+
+          assert.strictEqual(this.newSpace.searchTerm, 'frodo');
+          assert.strictEqual(this.newSpace.newVal, true);
+          assert.strictEqual(this.newSpace.limit, 10);
+          assert.strictEqual(this.newSpace.characters.length, 2);
+        });
+
+        it('shallow merges only', function() {
+          this.space(({ merge }) => {
+            merge({ userInfo: { name: 'zivi' } });
+          })();
+
+          assert.deepEqual(this.newSpace.userInfo.toJSON(), { name: 'zivi' });
         });
       });
 
-      it('supports subSpaces in lists', function() {
-        assert.deepEqual(this.space.state, {
-          initialState: 'here',
-          count: 1,
-          child: {},
-          nullItem: null,
-          otherChild: { value: 'present' },
-          list: [
-            { value: 'present', id: 'abc12-3' },
-            { value: 'another', id: 1234 },
-          ],
+      it('passes in the root space', function() {
+        this.space.characters[0](({ rootSpace }) => {
+          assert.strictEqual(rootSpace, this.space);
+        })();
+
+        this.space.characters(({ rootSpace }) => {
+          assert.strictEqual(rootSpace, this.space);
+        })();
+
+        this.space(({ rootSpace }) => {
+          assert.strictEqual(rootSpace, this.space);
+        })();
+      });
+
+      it('does’t notify until end', function() {
+        this.space(({ merge }) => {
+          merge({ limit: 10 });
+          assert.strictEqual(this.newSpace, null);
+        })();
+        assert.strictEqual(this.newSpace.limit, 10);
+      });
+
+      it('provides getSpace', function() {
+        return this.space(({ space, merge, getSpace }) => {
+          merge({ limit: space.limit + 1 });
+
+          return Promise.resolve().then(() => {
+            merge({ limit: getSpace().limit + 1 });
+            assert.strictEqual(space.limit, 5);
+            assert.strictEqual(getSpace().limit, 7);
+            assert.strictEqual(this.newSpace.limit, 6);
+          });
+        })().then(() => {
+          assert.strictEqual(this.newSpace.limit, 7);
         });
       });
 
-      it('can get spaces from list', function() {
-        const listItemSpace = this.space.subSpace('list').subSpace('abc12-3');
-        assert.equal(listItemSpace.state.value, 'present');
-      });
-
-      it('throws when id not found', function() {
-        assert.throws(
-          () => this.space.subSpace('list').subSpace('321'),
-          /Could not find item with id 321 in list/
-        );
-      });
-
-      it('removes spaces when null is given', function() {
-        const listItemSpace = this.space.subSpace('list').subSpace('abc12-3');
-        assert.equal(this.space.state.list.length, 2);
-        listItemSpace.setState(null);
-        assert.equal(this.space.state.list.length, 1);
-      });
-
-      it('provides a key attribute', function() {
-        assert('key' in this.space.subSpace('list').subSpace('abc12-3'));
-        assert.equal(
-          this.space.subSpace('list').subSpace('abc12-3').key,
-          'abc12-3'
-        );
-      });
-
-      it('key prop changes when ID changes', function() {
-        const itemSpace = this.space.subSpace('list').subSpace('abc12-3');
-        itemSpace.setState({ id: 'abc' });
-        assert.equal(this.space.subSpace('list').subSpace('abc').key, 'abc');
-      });
-
-      it('sets causedBy', function() {
-        const itemSpace = this.space.subSpace('list').subSpace('abc12-3');
-        this.space.subscribe(causedBy => {
-          if (causedBy === 'initialized') return;
-          assert.equal(causedBy, 'list[abc12-3]#myAction');
+      describe('action names', function() {
+        it('supports actions with no name', function() {
+          this.space(({ value, merge }) => merge({ limit: value }))(10);
+          assert.strictEqual(this.causedBy, '#unknown');
         });
 
-        itemSpace.setState({ val: 'is set' }, 'myAction');
-      });
-
-      it('can reorder lists with subspaces', function() {
-        const firstItemSpace = this.space.subSpace('list').subSpace('abc12-3');
-        this.space.subSpace('list').subSpace('1234');
-        this.space.setState({
-          list: [
-            { value: 'new guy', id: '4321' },
-            { value: 'another', id: '1234' },
-            { value: 'present', id: 'abc12-3', extra: true },
-          ],
+        it('guesses actions names correctly', function() {
+          var decLimit = ({ space, merge }) =>
+            merge({ limit: space.limit - 1 });
+          this.space(decLimit)();
+          assert.strictEqual(this.causedBy, '#decLimit');
         });
-        assert.deepEqual(this.space.state.list, [
-          { value: 'new guy', id: '4321' },
-          { value: 'another', id: '1234' },
-          { value: 'present', id: 'abc12-3', extra: true },
-        ]);
-        assert.equal(
-          firstItemSpace,
-          this.space.subSpace('list').subSpace('abc12-3')
-        );
-        assert(firstItemSpace.state.extra);
-      });
 
-      it('can reorder lists with subspaces directly', function() {
-        const firstItemSpace = this.space.subSpace('list').subSpace('abc12-3');
-        this.space.subSpace('list').subSpace('1234');
-        this.space
-          .subSpace('list')
-          .setState([
-            { value: 'new guy', id: '4321' },
-            { value: 'another', id: '1234' },
-            { value: 'present!', id: 'abc12-3', extra: true },
-          ]);
-        assert.deepEqual(this.space.state.list, [
-          { value: 'new guy', id: '4321' },
-          { value: 'another', id: '1234' },
-          { value: 'present!', id: 'abc12-3', extra: true },
-        ]);
-        assert.equal(
-          firstItemSpace,
-          this.space.subSpace('list').subSpace('abc12-3')
-        );
-        assert(firstItemSpace.state.extra);
-      });
-
-      it('cannot be updated with an object', function() {
-        assert.throws(
-          () => this.space.subSpace('list').setState({ val: true }),
-          /Array\/Object mismatch/
-        );
-      });
-    });
-
-    describe('children and parent subscribers', function() {
-      it('calls subscribers from inside -> out', function() {
-        let timesCalled = 0;
-        // the subspace's subscribers are called before the parent's
-        this.space.subscribe(causedBy => {
-          if (causedBy === 'initialized') return;
-          timesCalled++;
-          assert.equal(timesCalled, 2);
+        it('supports explicit action names', function() {
+          this.space(({ value, merge }) => merge({ limit: value }), 'setLimit')(
+            10
+          );
+          assert.strictEqual(this.causedBy, '#setLimit');
         });
-        this.subSpaceByName.subscribe(causedBy => {
-          if (causedBy === 'initialized') return;
-          timesCalled++;
-          assert.equal(timesCalled, 1);
-        });
-        this.subSpaceByName.setState({ updated: 'happened' });
-        assert.equal(timesCalled, 2);
       });
     });
   });
 
-  describe('space with an array as state', function() {
-    beforeEach(function() {
-      this.initialState = ['item', { val: true }];
-      this.spaceList = new Space(this.initialState);
+  describe('sub-spaces', function() {
+    it('lists are subspaces', function() {
+      assert(isSpace(this.space.characters));
     });
 
-    it('returns correct state', function() {
-      assert.deepEqual(this.spaceList.state, this.initialState);
-      assert(Array.isArray(this.spaceList.state));
+    it('objects are subspaces', function() {
+      assert(isSpace(this.space.userInfo));
     });
 
-    it('cannot be updated', function() {
-      assert.throws(
-        () => this.spaceList.setState({ not: 'good' }),
-        /Array\/Object mismatch/
+    it('can be updated', function() {
+      this.space.userInfo('name')('zivi');
+      assert.strictEqual(this.newSpace.userInfo.name, 'zivi');
+      assert.strictEqual(this.causedBy, 'userInfo#set:name');
+
+      const setState = ({ merge }, state) => merge({ state });
+      this.newSpace.userInfo.location(setState)('CA');
+      assert.strictEqual(this.newSpace.userInfo.name, 'zivi');
+      assert.strictEqual(this.newSpace.userInfo.location.state, 'CA');
+      assert.strictEqual(this.causedBy, 'userInfo.location#setState');
+    });
+  });
+
+  describe('array spaces', function() {
+    it('has items that are spaces', function() {
+      assert(isSpace(this.space.characters[0]));
+    });
+
+    it('items can be updated', function() {
+      this.space.characters[0]('evil')(true);
+      assert.strictEqual(this.newSpace.characters[0].evil, true);
+      assert(isSpaceArray(this.newSpace.characters));
+    });
+
+    it('has #map', function() {
+      const characterNames = [];
+      this.space.characters.map(character =>
+        characterNames.push(character.name)
       );
+      assert.deepEqual(characterNames, ['Bilbo Baggins', 'Frodo Baggins']);
     });
 
-    it('can be replaced', function() {
-      this.spaceList.replaceState(this.spaceList.state.concat('end'));
-      assert.deepEqual(this.spaceList.state, ['item', { val: true }, 'end']);
-      this.spaceList.replaceState(this.spaceList.state.slice(0, 1));
-      assert.deepEqual(this.spaceList.state, ['item']);
+    it('has #slice', function() {
+      const [lastCharacter] = this.space.characters.slice(-1);
+      assert.strictEqual(lastCharacter.name, 'Frodo Baggins');
     });
 
-    describe('is a child', function() {
-      beforeEach(function() {
-        this.space.setState({
-          subList: [1, 2, 3],
-        });
+    it('has sort', function() {
+      const sortedByMostBooks = this.space.characters.sort(
+        (a, b) => b.books.length - a.books.length
+      );
+      assert.deepEqual(sortedByMostBooks.map(c => c.name), [
+        'Frodo Baggins',
+        'Bilbo Baggins',
+      ]);
+    });
+
+    it('has filter', function() {
+      const bilboOnly = this.space.characters.filter(
+        character => character.name === 'Bilbo Baggins'
+      );
+      assert.deepEqual(bilboOnly.map(c => c.name), ['Bilbo Baggins']);
+    });
+
+    describe('updating', function() {
+      it('does not merge', function() {
+        assert.throws(() => {
+          this.space.characters(({ merge }) => {
+            merge({ something: 'fails' });
+          })();
+        }, /You cannot merge onto an array, try replace instead\?/);
+
+        assert.throws(() => {
+          this.space.characters(({ merge }) => merge({ something: 'fails' }))();
+        }, /You cannot merge onto an array, try replace instead\?/);
       });
 
-      it('state is expected array', function() {
-        const state = this.space.subSpace('subList').state;
-        assert.deepEqual(state, [1, 2, 3]);
+      it('has replace', function() {
+        this.space.characters(({ replace }) => {
+          replace([{ name: 'Sauron', evil: true }]);
+          assert.strictEqual(this.newSpace, null);
+        })();
+
+        assert.deepEqual(this.newSpace.characters.toJSON(), [
+          { name: 'Sauron', evil: true },
+        ]);
+      });
+
+      it('passes in push', function() {
+        const arwen = { name: 'Arwen', species: 'Elf', evil: false };
+        const boromir = { name: 'Boromir', species: 'Human', evil: false };
+        this.space.characters(({ push }) => {
+          push(arwen);
+          push(boromir);
+          assert.strictEqual(this.newSpace, null);
+        })();
+
+        assert.strictEqual(this.newSpace.characters.length, 4);
+        assert.deepEqual(this.newSpace.characters[2].toJSON(), arwen);
+        assert.deepEqual(this.newSpace.characters[3].toJSON(), boromir);
+      });
+
+      it('passes in unshift', function() {
+        const arwen = { name: 'Arwen', species: 'Elf', evil: false };
+        const boromir = { name: 'Boromir', species: 'Human', evil: false };
+        this.space.characters(({ unshift }) => {
+          unshift(arwen);
+          unshift(boromir);
+          assert.strictEqual(this.newSpace, null);
+        })();
+
+        assert.strictEqual(this.newSpace.characters.length, 4);
+        assert.deepEqual(this.newSpace.characters[0].toJSON(), boromir);
+        assert.deepEqual(this.newSpace.characters[1].toJSON(), arwen);
+      });
+
+      it('passes in remove', function() {
+        this.space.characters(({ push }) =>
+          push({ name: 'Sauron', evil: true })
+        )();
+        assert.strictEqual(
+          this.newSpace.characters.filter(item => item.evil).length,
+          1
+        );
+        const unchanged = this.newSpace;
+        this.newSpace.characters(({ remove }) => {
+          remove(character => character.evil);
+          assert.strictEqual(this.newSpace, unchanged);
+        })();
+        assert.strictEqual(
+          this.newSpace.characters.filter(item => item.evil).length,
+          0
+        );
+      });
+    });
+
+    describe('children', function() {
+      it('removes itself if it merges null', function() {
+        this.space.characters[0](() => null)();
+        assert.strictEqual(this.newSpace.characters.length, 1);
       });
     });
   });
