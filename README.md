@@ -29,7 +29,7 @@ Any and all [feedback is welcome](https://twitter.com/JonathanAbrams)!
   * [Quick Actions](#quick-actions-string)
   * [Custom Actions](#custom-actions-function)
   * [Action Named Params](#action-named-params)
-  * [Promises](#promises)
+  * [Promises and Async](#promises-and-async)
   * [Self-Destruct](#self-destruct)
 * [Utility Functions](#utility-functions)
   * [subscribe](#subscribe)
@@ -259,7 +259,7 @@ Available on array spaces only:
 
 Custom actions can optionally be async functions. If they're async (i.e. return a promise), the wrapped action will also return a promise, which is resolved when the custom action is resolved.
 
-**Note**: After an `await`, the `space` that's passed in at the top of the action may be out of date, it's _highly_ recommended that you use `getSpace()` to get the latest version of the space after an `await` (or inside a callback). If you need the latest rootSpace, do: `rootOf(getSpace())`.
+**Note**: After an `await`, the `space` that's passed in at the top of the action may be out of date, it's _highly_ recommended that you use `getSpace()` to get the latest version of the space after an `await` (or inside a callback). If you need the latest root space, do: `rootOf(getSpace())`.
 
 ## Utility Functions
 
@@ -319,12 +319,19 @@ Parameter: A space
 
 Returns: The root space associated with the given space.
 
+**Note**: Returns the latest root space of the newest version of the passed in space. This means you can safely do `rootOf(space)` anywhere in a custom action, and always get the latest version.
+
 ```js
 import Space, { rootOf } from 'spaceace';
 
 const space = new Space({ user: { name: 'Frodo' } });
 
 rootOf(space.user) === space; // true
+
+space.user(({ merge, space }, name) => {
+  merge({ name });
+  rootOf(space).user.name === 'Sam'; // true
+})('Sam');
 ```
 
 ## Array Methods
@@ -343,10 +350,13 @@ const TodoList = space => (
 
 Returns: The contents of a space as either a real array or object literal.
 
+This is called automatically by `JSON.stringy`.
+
 ```js
 const space = new Space({ user: 'Frodo', todos: [] });
 space.toJSON(); // { user: 'Frodo', todos: [] }
 space.todos.toJSON(); // []
+JSON.stringify(space); // '{ "user": "Frodo", "todos": [] }'
 ```
 
 ## FAQ
@@ -357,7 +367,7 @@ Hopefully that feature will come in v2!
 
 **Is this Flux-compatible**
 
-Not quite, but it does take a lot of inspiration from Flux.
+Nope, but it does take a lot of inspiration from Flux + Redux.
 
 ## License
 
