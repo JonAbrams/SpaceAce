@@ -242,7 +242,6 @@ You can change a space as much as you like in a single action, but subscribers w
 Available on array spaces and object spaces:
 
 * **space** – space – The space that the action belongs to. Very useful for applying new values based on existing values.
-* **rootSpace** – space – Since spaces can be children of other spaces, it’s often useful to access the top-most space.
 * **replace** – function(object|array) – Replaces the contents of the current space with the object or array you pass to it. Typically used with array spaces.
 * **getSpace** — function – Returns the latest version of the space that this action was called on. Use inside of promises or any async callback!
 
@@ -256,11 +255,11 @@ Available on array spaces only:
 * **unshift** – function(item) – If the space is an array, this adds a value to the beginning of it.
 * **remove** – function(function(item, index)) – Calls the given function with each item in the list. For any call that returns a truthy value, that item is removed from the array.
 
-### Promises
+### Promises and Async
 
-If you return a promise in a custom action, subscribers will be notified multiple times: At the initial return, and when a promise is done being resolved. This means that custom actions can use `async/await`, and changes to the state will appear in your app whenever you call `await`.
+Custom actions can optionally be async functions. If they're async (i.e. return a promise), the wrapped action will also return a promise, which is resolved when the custom action is resolved.
 
-**Note**: After an `await`, the `space` (and `rootSpace`) that's passed in at the top of the action may be out of date, it's recommended that you use `getSpace()` to get the latest version of the space after an `await` (or inside a callback). If you need the latest rootSpace, do: `rootOf(getSpace())`
+**Note**: After an `await`, the `space` that's passed in at the top of the action may be out of date, it's _highly_ recommended that you use `getSpace()` to get the latest version of the space after an `await` (or inside a callback). If you need the latest rootSpace, do: `rootOf(getSpace())`.
 
 ## Utility Functions
 
