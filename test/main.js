@@ -380,14 +380,16 @@ describe('Space', function() {
     });
 
     it('can update rootSpace', function() {
-      const updateUserInfoAndLimit = ({ merge, space }, name) => {
+      const updateUserInfoAndLimit = ({ merge, space }, name, email) => {
         merge({ name });
         rootOf(space)({ limit: 6 });
+        merge({ email });
       };
 
-      this.space.userInfo(updateUserInfoAndLimit)('Zivi');
+      this.space.userInfo(updateUserInfoAndLimit)('Zivi', 'zivi@example.com');
       assert.strictEqual(this.newSpace.userInfo.name, 'Zivi');
       assert.strictEqual(this.newSpace.limit, 6);
+      assert.strictEqual(this.newSpace.userInfo.email, 'zivi@example.com');
     });
   });
 
@@ -496,13 +498,6 @@ describe('Space', function() {
           this.newSpace.characters.filter(item => item.evil).length,
           0
         );
-      });
-    });
-
-    describe('children', function() {
-      it('removes itself if it merges null', function() {
-        this.space.characters[0](() => null)();
-        assert.strictEqual(this.newSpace.characters.length, 1);
       });
     });
   });
