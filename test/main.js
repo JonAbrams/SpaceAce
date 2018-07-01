@@ -85,6 +85,8 @@ describe('Space', function() {
 
   it('is frozen (let it go!)', function() {
     assert(Object.isFrozen(this.space));
+    assert(Object.isFrozen(this.space.toJSON()));
+    assert(Object.isFrozen(this.space.toJSON().characters));
   });
 
   describe('class methods', function() {
