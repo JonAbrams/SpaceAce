@@ -123,7 +123,7 @@ const space = new Space({ name: 'Jon', todos: [] });
 // so the app can be re-rendered
 subscribe(space, ({ newState, oldState, causedBy }) => {
   // Example `causedBy`s:
-  // 'todoList#addTodo', 'todos[akd4a1plj]#toggleDone'
+  // 'todoList#addTodo', 'todos[1]#toggleDone'
   console.log(`Re-render of <Container /> caused by ${causedBy}`);
   renderApp(space);
 });

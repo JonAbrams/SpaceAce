@@ -402,6 +402,7 @@ describe('Space', function() {
 
     it('items can be updated', function() {
       this.space.characters[0]('evil')(true);
+      assert.strictEqual(this.causedBy, 'characters[0]#set:evil');
       assert.strictEqual(this.newSpace.characters[0].evil, true);
       assert(isSpaceArray(this.newSpace.characters));
     });
