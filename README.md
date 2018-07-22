@@ -173,7 +173,7 @@ export default const Todo = ({ space: todo }) => {
   return (
     <li>
       <form onSubmit={todo(saveTodo)}>
-        <input type="checkbox" checked={todo.done} onChange={todo(toggleDone)} />
+        <input type="checkbox" checked={todo.done} onChange={todo('done')} />
         {/* todo('msg') returns a function that updates the 'msg' attribute on the
         todo space! */}
         <input value={todo.content} onChange={todo('content')} />
@@ -182,9 +182,6 @@ export default const Todo = ({ space: todo }) => {
     </li>
   );
 };
-
-// In this case, only the `done` attribute is changed on the todo
-const toggleDone = ({ space, merge }) => merge({ done: !space.done });
 
 const saveTodo = async ({ space, merge }, event) => {
   event.preventDefault();
