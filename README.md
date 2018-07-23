@@ -20,6 +20,14 @@ Any and all [feedback is welcome](https://twitter.com/JonathanAbrams)!
 * **Framework Agnostic** – Designed with React in mind, but works with any stateless view library/framework. Has no external dependencies. Requires only ES5.
 * **Small** – ~9K uncompressed, ~2.5K gzipped.
 
+## Install
+
+```bash
+npm install spaceace
+# or
+yarn add spaceace
+```
+
 ## Documentation
 
 * [What is a space?](#what-is-a-space)
