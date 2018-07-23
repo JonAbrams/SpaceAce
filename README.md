@@ -173,8 +173,8 @@ const addTodo = ({ push }, event) => {
 
 ```jsx
 // You can rename the space to something more meaningful
-// It's recommended that the prop still be called `space`, so when working on
-// the parent you know to this component a space
+// It's recommended that the prop still be called `space`, so when you’re
+// working on the parent component, you’ll know it expects a space to be passed in
 export default const Todo = ({ space: todo }) => {
   const doneClassName = todo.done ? 'done' : '';
 
