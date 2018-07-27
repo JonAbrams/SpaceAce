@@ -420,6 +420,24 @@ describe('Space', function() {
       assert.strictEqual(lastCharacter.name, 'Frodo Baggins');
     });
 
+    it('has #includes', function() {
+      const arr = new Space([1, 2, 3]);
+      assert(arr.includes(2));
+      assert(!arr.includes(4));
+    });
+
+    it('has #concat', function() {
+      const arr = new Space([1, 2, 3]);
+      assert.deepStrictEqual(arr.concat(4), [1, 2, 3, 4]);
+    });
+
+    it('has #join', function() {
+      const arr = new Space([1, 2, 3]);
+      assert.deepStrictEqual(arr.join(), '1,2,3');
+      assert.deepStrictEqual(arr.join(', '), '1, 2, 3');
+      assert.deepStrictEqual(arr.join('-'), '1-2-3');
+    });
+
     it('has sort', function() {
       const sortedByMostBooks = this.space.characters.sort(
         (a, b) => b.books.length - a.books.length

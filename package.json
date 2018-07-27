@@ -1,6 +1,6 @@
 {
   "name": "spaceace",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A fancy immutable storage library for JavaScript",
   "main": "lib/Space.js",
   "scripts": {
@@ -11,7 +11,11 @@
     "type": "git",
     "url": "git+https://github.com/JonAbrams/SpaceAce.git"
   },
-  "keywords": ["react", "store", "state"],
+  "keywords": [
+    "react",
+    "store",
+    "state"
+  ],
   "author": "Jon Abrams <jon@jonabrams.com>",
   "license": "MIT",
   "bugs": {
