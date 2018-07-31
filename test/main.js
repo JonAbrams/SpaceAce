@@ -296,7 +296,7 @@ describe('Space', function() {
           assert.strictEqual(this.newSpace.searchTerm, 'frodo');
           assert.strictEqual(this.newSpace.newVal, true);
           assert.strictEqual(this.newSpace.limit, 10);
-          assert.strictEqual(this.newSpace.characters.length, 2);
+          assert.strictEqual(this.newSpace.characters.size, 2);
         });
 
         it('shallow merges only', function() {
@@ -407,6 +407,10 @@ describe('Space', function() {
       assert(isSpaceArray(this.newSpace.characters));
     });
 
+    it('has #size', function() {
+      assert.strictEqual(this.space.characters.size, 2);
+    });
+
     it('has #map', function() {
       const characterNames = [];
       this.space.characters.map(character =>
@@ -439,9 +443,9 @@ describe('Space', function() {
       assert.deepStrictEqual(arr.join('-'), '1-2-3');
     });
 
-    it('has sort', function() {
+    it('has #sort', function() {
       const sortedByMostBooks = this.space.characters.sort(
-        (a, b) => b.books.toJSON().length - a.books.toJSON().length
+        (a, b) => b.books.size - a.books.size
       );
       assert.deepEqual(sortedByMostBooks.map(c => c.name), [
         'Frodo Baggins',
@@ -487,7 +491,7 @@ describe('Space', function() {
           push(boromir);
         })();
 
-        assert.strictEqual(this.newSpace.characters.toJSON().length, 4);
+        assert.strictEqual(this.newSpace.characters.size, 4);
         assert.deepEqual(this.newSpace.characters[2].toJSON(), arwen);
         assert.deepEqual(this.newSpace.characters[3].toJSON(), boromir);
       });
@@ -500,7 +504,7 @@ describe('Space', function() {
           unshift(boromir);
         })();
 
-        assert.strictEqual(this.newSpace.characters.toJSON().length, 4);
+        assert.strictEqual(this.newSpace.characters.size, 4);
         assert.deepEqual(this.newSpace.characters[0].toJSON(), boromir);
         assert.deepEqual(this.newSpace.characters[1].toJSON(), arwen);
       });
