@@ -417,6 +417,7 @@ describe('Space', function() {
 
     it('has #slice', function() {
       const [lastCharacter] = this.space.characters.slice(-1);
+      assert(isSpace(lastCharacter));
       assert.strictEqual(lastCharacter.name, 'Frodo Baggins');
     });
 
@@ -440,7 +441,7 @@ describe('Space', function() {
 
     it('has sort', function() {
       const sortedByMostBooks = this.space.characters.sort(
-        (a, b) => b.books.length - a.books.length
+        (a, b) => b.books.toJSON().length - a.books.toJSON().length
       );
       assert.deepEqual(sortedByMostBooks.map(c => c.name), [
         'Frodo Baggins',
@@ -486,7 +487,7 @@ describe('Space', function() {
           push(boromir);
         })();
 
-        assert.strictEqual(this.newSpace.characters.length, 4);
+        assert.strictEqual(this.newSpace.characters.toJSON().length, 4);
         assert.deepEqual(this.newSpace.characters[2].toJSON(), arwen);
         assert.deepEqual(this.newSpace.characters[3].toJSON(), boromir);
       });
@@ -499,7 +500,7 @@ describe('Space', function() {
           unshift(boromir);
         })();
 
-        assert.strictEqual(this.newSpace.characters.length, 4);
+        assert.strictEqual(this.newSpace.characters.toJSON().length, 4);
         assert.deepEqual(this.newSpace.characters[0].toJSON(), boromir);
         assert.deepEqual(this.newSpace.characters[1].toJSON(), arwen);
       });
