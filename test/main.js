@@ -231,22 +231,25 @@ describe('Space', function() {
         assert.strictEqual(this.newSpace.limit, 7);
       });
 
-      it('supports promises', function() {
-        function incLimitPromise({ space, merge }) {
+      it('supports promises/async', async function() {
+        async function incLimitPromise({ getSpace, merge }) {
           merge({ searchTerm: '' });
-          return Promise.resolve().then(() => {
-            merge({ limit: space.limit + 1 });
-          });
+          await new Promise(resolve =>
+            setTimeout(() => {
+              merge({ limit: 7 });
+              resolve();
+            })
+          );
+          merge({ limit: getSpace().limit + 1 });
         }
 
-        return this.space(incLimitPromise)().then(newSpace => {
-          assert.strictEqual(this.newSpace, newSpace);
-          assert.strictEqual(newSpace.limit, 6);
-          assert.strictEqual(newSpace.searchTerm, '');
+        const newSpace = await this.space(incLimitPromise)();
+        assert.strictEqual(this.newSpace, newSpace);
+        assert.strictEqual(newSpace.limit, 8);
+        assert.strictEqual(newSpace.searchTerm, '');
 
-          // Subscibers called at end of action, and when promise resolved
-          assert.strictEqual(this.numCalls, 2);
-        });
+        // Subscibers called whenever space changed
+        assert.strictEqual(this.numCalls, 3);
       });
 
       describe('args', function() {
@@ -320,8 +323,8 @@ describe('Space', function() {
         assert.strictEqual(this.numCalls, 2);
       });
 
-      it('provides getSpace', function() {
-        return this.space(({ space, merge, getSpace }) => {
+      it('provides getSpace', async function() {
+        await this.space(async ({ space, merge, getSpace }) => {
           // limit is 5
           merge({ limit: space.limit + 1 }); // change to 6
 
@@ -331,10 +334,23 @@ describe('Space', function() {
             assert.strictEqual(getSpace().limit, 7); // latest is 7
             assert.strictEqual(this.newSpace.limit, 7); // global space is latest
           });
-        })().then(() => {
-          // Can safely see the final updated state after action's promise resolved
-          assert.strictEqual(this.newSpace.limit, 7);
-        });
+        })();
+
+        // Can safely see the final updated state after action's promise resolved
+        assert.strictEqual(this.newSpace.limit, 7);
+      });
+
+      it('updates latest spaces', async function() {
+        await this.space(({ space, merge }) => {
+          space.userInfo.location({ city: 'San Jose' });
+          space.userInfo({ name: 'Noj' });
+          merge({ limit: 10 });
+        })();
+        assert.strictEqual(this.newSpace.userInfo.name, 'Noj');
+        assert.strictEqual(this.newSpace.userInfo.location.city, 'San Jose');
+        assert.notStrictEqual(this.newSpace.userInfo, this.space.userInfo);
+        assert.strictEqual(this.newSpace.limit, 10);
+        assert.strictEqual(this.space.characters, this.newSpace.characters);
       });
 
       describe('action names', function() {
