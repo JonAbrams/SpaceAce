@@ -344,13 +344,25 @@ describe('Space', function() {
         await this.space(({ space, merge }) => {
           space.userInfo.location({ city: 'San Jose' });
           space.userInfo({ name: 'Noj' });
-          merge({ limit: 10 });
+          merge({
+            limit: 10,
+            characters: space.characters.concat({
+              name: 'Sauron',
+              evil: true,
+            }),
+          });
+          space.characters[0]({
+            name: 'Milbo Baggins',
+          });
         })();
         assert.strictEqual(this.newSpace.userInfo.name, 'Noj');
         assert.strictEqual(this.newSpace.userInfo.location.city, 'San Jose');
         assert.notStrictEqual(this.newSpace.userInfo, this.space.userInfo);
         assert.strictEqual(this.newSpace.limit, 10);
-        assert.strictEqual(this.space.characters, this.newSpace.characters);
+        assert.strictEqual(this.newSpace.characters[0].name, 'Milbo Baggins');
+        assert.strictEqual(this.newSpace.characters[2].name, 'Sauron');
+
+        assert.strictEqual(this.oldSpace.characters[0].name, 'Bilbo Baggins');
       });
 
       describe('action names', function() {
