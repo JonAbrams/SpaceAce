@@ -40,7 +40,6 @@ yarn add spaceace
   * [Custom Actions](#custom-actions-function)
   * [Action Named Params](#action-named-params)
   * [Promises and Async](#promises-and-async)
-  * [Self-Destruct](#self-destruct)
 * [Utility Functions](#utility-functions)
   * [subscribe](#subscribe)
   * [isSpace](#isspace)
