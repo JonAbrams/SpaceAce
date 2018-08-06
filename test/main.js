@@ -208,6 +208,22 @@ describe('Space', function() {
         assert.strictEqual(this.causedBy, '#set:limit');
         assert.strictEqual(this.newSpace.limit, 10);
       });
+
+      it('uses square notation when appropriate', function() {
+        this.space({
+          'Has a space': {
+            list: [{ 'sub-item': { item: 'Present' } }],
+          },
+        });
+        this.newSpace['Has a space'].list[0]['sub-item'](
+          { changed: true },
+          'custom'
+        );
+        assert.equal(
+          this.causedBy,
+          '["Has a space"].list[0]["sub-item"]#custom'
+        );
+      });
     });
 
     describe('actions', function() {
