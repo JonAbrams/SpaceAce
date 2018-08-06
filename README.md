@@ -10,7 +10,9 @@ SpaceAce is a JS library for storing and updating the _state_ of your front-end 
 
 Like Redux, it has unidirectional data flow, uses an immutable state, allows for clearly defined actions, but makes it much easier to generate new states.
 
-[Introductory blog post](https://medium.com/@jonathanabrams/introducing-spaceace-a-new-kind-of-front-end-state-library-5215b18adc11)
+- [Introductory blog post](https://medium.com/@jonathanabrams/introducing-spaceace-a-new-kind-of-front-end-state-library-5215b18adc11)
+- [SpaceAce Todo App on CodeSandbox](https://codesandbox.io/s/zl1n53mwwl)
+- [Original Redux Todo App on CodeSandbox](https://codesandbox.io/s/github/reduxjs/redux/tree/master/examples/todos) (for comparison)
 
 ## Benefits
 
