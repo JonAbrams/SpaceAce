@@ -10,9 +10,9 @@ SpaceAce is a JS library for storing and updating the _state_ of your front-end 
 
 Like Redux, it has unidirectional data flow, uses an immutable state, allows for clearly defined actions, but makes it much easier to generate new states.
 
-- [Introductory blog post](https://medium.com/@jonathanabrams/introducing-spaceace-a-new-kind-of-front-end-state-library-5215b18adc11)
-- [SpaceAce Todo App on CodeSandbox](https://codesandbox.io/s/zl1n53mwwl)
-- [Original Redux Todo App on CodeSandbox](https://codesandbox.io/s/github/reduxjs/redux/tree/master/examples/todos) (for comparison)
+* [Introductory blog post](https://medium.com/@jonathanabrams/introducing-spaceace-a-new-kind-of-front-end-state-library-5215b18adc11)
+* [SpaceAce Todo App on CodeSandbox](https://codesandbox.io/s/zl1n53mwwl)
+* [Original Redux Todo App on CodeSandbox](https://codesandbox.io/s/github/reduxjs/redux/tree/master/examples/todos) (for comparison)
 
 ## Benefits
 
@@ -20,7 +20,7 @@ Like Redux, it has unidirectional data flow, uses an immutable state, allows for
 * **Modular** – View components can manage their own part of the state, update logic doesn't need to be centralized.
 * **Conveniet** – Ridiculously easy to update the state in the simplest cases (e.g. the user editing a text field).
 * **Framework Agnostic** – Designed with React in mind, but works with any stateless view library. Has no external dependencies. Requires only ES5, which can be [polyfilled](https://github.com/es-shims/es5-shim)/[transpiled](https://babeljs.io).
-* **Small** – ~9K uncompressed, ~2.5K gzipped. No dependencies.
+* **Small** – ~7.9K uncompressed, ~2.2K gzipped. No dependencies.
 
 ## Install
 
@@ -40,12 +40,11 @@ yarn add spaceace
   * [Custom Actions](#custom-actions-function)
   * [Action Named Params](#action-named-params)
   * [Promises and Async](#promises-and-async)
+  * [Arrays](#arrays)
 * [Utility Functions](#utility-functions)
   * [subscribe](#subscribe)
   * [isSpace](#isspace)
-  * [isSpaceArray](#isspacearray)
   * [rootOf](#rootof)
-* [Array Methods](#array-methods)
 * [toJSON](#tojson)
 * [FAQ](#faq)
 
@@ -125,18 +124,18 @@ import ReactDOM from 'react-dom';
 import Space, { subscribe } from 'spaceace';
 import Container from './Container';
 
-// Create the root "space" along with its initial state
-const space = new Space({ name: 'Jon', todos: [] });
+// Create the initial root "space" along with its initial state
+const rootSpace = new Space({ name: 'Jon', todos: [] });
 
 // Subscribe to any changes that occur within the space
 // so the app can be re-rendered
-subscribe(space, ({ newState, oldState, causedBy }) => {
+subscribe(rootSpace, ({ newSpace, oldSpace, causedBy }) => {
   // Example `causedBy`s:
-  // 'todoList#addTodo', 'todos[1]#toggleDone'
+  // '#addTodo', 'todos[1]#toggleDone'
   console.log(`Re-render of <Container /> caused by ${causedBy}`);
-  renderApp(space);
+  renderApp(newSpace); //re-render on space change
 });
-renderApp(space); // initial render
+renderApp(rootSpace); // initial render
 
 function renderApp(space) {
   ReactDOM.render(
@@ -149,6 +148,7 @@ function renderApp(space) {
 **App.js**
 
 ```jsx
+import uuid from 'uuid/v4';
 import Todo from './Todo';
 
 export default function App({ space }) {
@@ -163,10 +163,16 @@ export default function App({ space }) {
   );
 }
 
-const addTodo = ({ push }, event) => {
+const addTodo = ({ merge, space }, event) => {
   event.preventDefault();
 
-  push({ content: 'A new TODO', done: false });
+  merge({
+    todos: space.todos.concat({
+      content: 'A new TODO',
+      done: false,
+      id: uuid(),
+    }),
+  });
 };
 ```
 
@@ -182,9 +188,15 @@ export default const Todo = ({ space: todo }) => {
   return (
     <li>
       <form onSubmit={todo(saveTodo)}>
+        {/*
+            todo('done') sets `todo.done` to true/false when the checkbox’s
+            onChange is triggered
+        */}
         <input type="checkbox" checked={todo.done} onChange={todo('done')} />
-        {/* todo('msg') returns a function that updates the 'msg' attribute on the
-        todo space! */}
+        {/*
+          todo('content') sets `todo.content` to whatever is typed into
+          the text input.
+        */}
         <input value={todo.content} onChange={todo('content')} />
         <button disabled={todo.saving}>Save</button>
       </form>
@@ -192,12 +204,14 @@ export default const Todo = ({ space: todo }) => {
   );
 };
 
-const saveTodo = async ({ space, merge }, event) => {
+const saveTodo = async ({ space: todo, merge }, event) => {
   event.preventDefault();
 
   merge({ saving: true });
 
-  await fetch('/api/todos', { method: 'POST', body: space.toJSON() });
+  // `todo.toJSON()` returns the space as a simple JS object
+  // JSON.stringify(space) auto-calls `space.toJSON()` before stringifying
+  await fetch('/api/todos', { method: 'POST', body: todo.toJSON() });
 
   merge({ saving: false });
 };
@@ -205,24 +219,24 @@ const saveTodo = async ({ space, merge }, event) => {
 
 ## Updating Spaces
 
-There are three ways to update spaces. Each method involves calling the space, the type of value you pass in determines how the update occurs: Immediate updates (object), quick actions (string), and custom actions (function).
+There are three ways to update spaces. Each method involves calling the space as a function, the type of value you pass in determines which of the three update methods is used: Immediate updates (object), quick actions (string), and custom actions (function).
 
 ### Immediate Update (object)
 
-Immediately "changes" the space by merging the given object onto the space. A new space is returned with the changes applied and subscribers are immediately invoked.
+Immediately "changes" the space by shallowly merging the given object onto the space. A new space is returned with the changes applied and subscribers are immediately invoked.
 
 ```js
-const space = new Space({ name: 'Frodo', race: 'hobbit' });
-const newSpace = space({ name: 'Bilbo' }); // { name: 'Bilbo', race: 'hobbit' }
+const space = new Space({ name: 'Frodo', race: 'Hobbit' });
+const newSpace = space({ name: 'Bilbo' }); // { name: 'Bilbo', race: 'Hobbit' }
 ```
 
 ### Quick Actions (string)
 
 Returns a callback function that will change the specified attribute when called. If the parameter is an _event_, the event’s target’s value will be used, and `event.preventDefault()` will automatically be called. Very useful for `input`, `select`, and `button` elements.
 
-If the event's origin is of `type="number"`, the value will be of type `number`.
+If the event's target is of `input[type="number"]`, the value will be cast to type `number`.
 
-If the event's origin is a checkbox, the value is taken from the _checked_ property instead, which is a boolean.
+If the event's target is of `input[type="checkbox"]`, the value is taken from the _checked_ property instead, which is a boolean.
 
 ```jsx
 export default const Todo = ({ space: todo }) => {
@@ -237,35 +251,75 @@ export default const Todo = ({ space: todo }) => {
 
 ### Custom Actions (function)
 
-A custom action is a function that is passed to a space. It returns a wrapped function. When the wrapped function is called, the action is called with a bunch of named parameters (as the first actual parameter), they differ depending on whether the space represents an object or an array. The rest of the parameters are whatever is passed to the wrapped function whenever it's called.
+A custom action is a function that is passed to a space. It returns a wrapped function. When the wrapped function is called, the action is called with a few named parameters (as the first actual parameter). The rest of the parameters are whatever is passed to the wrapped function when it's eventually called.
 
-You can change a space as much as you like in a single action, but subscribers won't be notified until the action is done.
+Every time you change a space within a custom action, subscribers will be notified. Every change you apply will apply on the latest version of the space.
 
 ### Action named params
 
 [Named params](http://exploringjs.com/es6/ch_parameter-handling.html#sec_named-parameters) passed to custom actions.
 
-Available on array spaces and object spaces:
-
 * **space** – space – The space that the action belongs to. Very useful for applying new values based on existing values.
-* **replace** – function(object|array) – Replaces the contents of the current space with the object or array you pass to it. Typically used with array spaces.
-* **getSpace** — function – Returns the latest version of the space that this action was called on. Use inside of promises or any async callback!
-
-Available on object spaces only:
-
-* **merge** – function(object) – Copies each property from the passed in object onto the space. This is a non-recursive (aka shallow) merge.
-
-Available on array spaces only:
-
-* **push** – function(item) – If the space is an array, this adds a value to the end of it.
-* **unshift** – function(item) – If the space is an array, this adds a value to the beginning of it.
-* **remove** – function(function(item, index)) – Calls the given function with each item in the list. For any call that returns a truthy value, that item is removed from the array.
+* **getSpace** — function() -> space – Returns the latest version of the space that this action was called on. Use inside of promises or after any async call to make sure you have this space’s latest version!
+* **merge** – function(object) -> space – Copies each property from the passed in object onto the space. This is a non-recursive (aka shallow) merge. Returns the new space.
+* **replace** – function(object) -> space – Replaces the contents of the current space with the object or array you pass to it. Returns the new space.
 
 ### Promises and Async
 
-Custom actions can optionally be async functions. If they're async (i.e. return a promise), the wrapped action will also return a promise, which is resolved when the custom action is resolved.
+Custom actions can optionally be async functions. If they're async (i.e. return a promise), the wrapped action will also return a promise, which is resolved when the custom action is resolved. Return values like this are typically only needed when writing tests.
 
-**Note**: After an `await`, the `space` that's passed in at the top of the action may be out of date, it's _highly_ recommended that you use `getSpace()` to get the latest version of the space after an `await` (or inside a callback). If you need the latest root space, do: `rootOf(getSpace())`.
+**Note**: After an `await`, the `space` that's passed in at the top of the action may be out of date, it's _highly_ recommended to always use `getSpace()` to get the latest version of the space after an `await` (or inside a callback).
+
+### Arrays
+
+Arrays in a space are proper JS arrays, but are treat by SpaceAce as spaces. You cannot update them like you can normal spaces based on objects. Unlike vanilla arrays, you can call `toJSON()` on arrays taken from spaces to get a version of the array containing only plain object literals. If you call `isSpace(…)` on an array taken from a space, it will return true.
+
+To update an array in a space, modify its parent:
+
+```jsx
+const changeTodos = ({ merge, space }, itemToRemove) => {
+  // Add an item to the beginning
+  space = merge({
+    todos: [
+      {
+        content: 'A new TODO',
+        done: false,
+        id: uuid(),
+      },
+      ...space.todos
+    ]
+  });
+
+  // Add an item to the end
+  space = merge({
+    todos: [
+      ...space.todos,
+      {
+        content: 'A new TODO',
+        done: false,
+        id: uuid(),
+      }],
+  });
+
+  // Insert an item
+  space = merge({
+    todos: [
+      ...space.todos.slice(0, 2),
+      {
+        content: 'A new TODO',
+        done: false,
+        id: uuid(),
+      },
+      ...space.todos.slice(2)
+    ],
+  });
+
+  // Remove an item
+  merge({
+    todos: space.todos.filter(item => item !== itemToRemove);
+  })
+};
+```
 
 ## Utility Functions
 
@@ -301,22 +355,7 @@ Returns: `true` if the given value is a space, `false` otherwise.
 import Space, { isSpace } from 'spaceace';
 
 isSpace(new Space({})); // returns true
-isSpace(new Space([])); // returns true
 isSpace({}); // returns false
-```
-
-### isSpaceArray
-
-Returns: `true` if the given value is a space that contains an array, `false` otherwise.
-
-```js
-import Space, { isSpaceArray } from 'spaceace';
-
-const space = new Space({ todos: [] });
-isSpaceArray(space.todos); // returns true
-isSpaceArray(space; // returns false
-isSpaceArray({}); // returns false
-isSpaceArray([]); // returns false
 ```
 
 ### rootOf
@@ -325,7 +364,7 @@ Parameter: A space
 
 Returns: The root space associated with the given space.
 
-**Note**: Returns the latest root space of the newest version of the passed in space. This means you can safely do `rootOf(space)` anywhere in a custom action, and always get the latest version.
+**Note**: Returns the latest root space of the passed in space. This means you can safely do `rootOf(space)` anywhere in a custom action, and always get the latest version.
 
 ```js
 import Space, { rootOf } from 'spaceace';
@@ -340,28 +379,15 @@ space.user(({ merge, space }, name) => {
 })('Sam');
 ```
 
-## Array Methods
-
-The following functions work the same as their JavaScript array counterparts. Except they never mutate the space they're called on, they only return a fresh array.
-
-[map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map), [filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter), [slice](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice), [includes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes), [concat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat), [join](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/join), and [sort](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
-
-```js
-const TodoList = space => (
-  <ul>{space.todos.map(todo => <Todo space={todo} key={todo.id} />)}</ul>
-);
-```
-
 ## toJSON
 
-Returns: The contents of a space as either a real array or object literal.
+Returns: The contents of a space as an object literal.
 
-This is called automatically by `JSON.stringy`.
+This is called automatically by `JSON.stringify`, that’s a built-in feature of JS.
 
 ```js
 const space = new Space({ user: 'Frodo', todos: [] });
 space.toJSON(); // { user: 'Frodo', todos: [] }
-space.todos.toJSON(); // []
 JSON.stringify(space); // '{ "user": "Frodo", "todos": [] }'
 ```
 
@@ -369,11 +395,23 @@ JSON.stringify(space); // '{ "user": "Frodo", "todos": [] }'
 
 **How do I add middleware like in Redux?**
 
-Hopefully that feature will come in v2!
+Hopefully that feature will come soon, please add an issue if you’re interested!
 
-**Is this Flux-compatible**
+**Are spaces really immutable?**
 
-Nope, but it does take a lot of inspiration from Flux + Redux.
+Yes? Ok… you got me.
+
+Each space is indeed frozen, all of its child spaces, arrays, and values are also frozen. If a space has changed, you can tell by doing an equality check between both versions, if they're equal to each other, then all their properties are guaranteed to be the identical. It's safe to pass a space into a Pure Component, for example.
+
+But! There are a few hidden, non-enumerable, properties on every space (and array) that are mutable. They're not meant to be changed by you, they're used by SpaceAce to track subscribers and newer versions of the same space.
+
+**Has this been used in production?**
+
+Yes! Checkout out https://www.trustedhealth.com/
+
+**Is there an example app?**
+
+Yup-a-roni! I modified [Redux's sample todo list](https://codesandbox.io/s/github/reduxjs/redux/tree/master/examples/todos) app to use [SpaceAce instead](https://codesandbox.io/s/zl1n53mwwl)
 
 ## License
 

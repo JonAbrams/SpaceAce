@@ -3,7 +3,7 @@
 
 const assert = require('assert');
 const Space = require('../lib/Space');
-const { subscribe, isSpace, isSpaceArray, rootOf } = Space;
+const { subscribe, isSpace, rootOf } = Space;
 
 describe('Space', function() {
   beforeEach(function() {
@@ -93,18 +93,10 @@ describe('Space', function() {
     describe('.isSpace', function() {
       it('identifies spaces', function() {
         assert(isSpace(this.space));
-        assert(isSpace(this.space.characters));
+        assert(isSpace(this.space.characters)); // Arrays are pseudo-spaces
         assert(isSpace(this.space.characters[0]));
         assert(!isSpace({}));
         assert(!isSpace());
-      });
-    });
-
-    describe('.isSpaceArray', function() {
-      it('identifies spaces that contain arrays', function() {
-        assert(isSpaceArray(this.space.characters));
-        assert(!isSpaceArray(this.space));
-        assert(!isSpaceArray(this.space.characters[0]));
       });
     });
 
@@ -179,8 +171,6 @@ describe('Space', function() {
       it('provides correct causedBy for nested spaces', function() {
         this.space.characters[0]('evil')(true);
         assert.strictEqual(this.causedBy, 'characters[0]#set:evil');
-        this.newSpace.characters[0].books(({ replace }) => replace([]))();
-        assert.strictEqual(this.causedBy, 'characters[0].books#unknown');
       });
 
       it('applies values from events', function() {
@@ -315,7 +305,7 @@ describe('Space', function() {
           assert.strictEqual(this.newSpace.searchTerm, 'frodo');
           assert.strictEqual(this.newSpace.newVal, true);
           assert.strictEqual(this.newSpace.limit, 10);
-          assert.strictEqual(this.newSpace.characters.size, 2);
+          assert.strictEqual(this.newSpace.characters.length, 2);
         });
 
         it('shallow merges only', function() {
@@ -387,14 +377,14 @@ describe('Space', function() {
           assert.strictEqual(this.causedBy, '#unknown');
         });
 
-        it('guesses actions names correctly', function() {
+        it('guesses action names correctly', function() {
           var decLimit = ({ space, merge }) =>
             merge({ limit: space.limit - 1 });
           this.space(decLimit)();
           assert.strictEqual(this.causedBy, '#decLimit');
         });
 
-        it('supports explicit action names', function() {
+        it('supports overriding action names', function() {
           this.space(({ value, merge }) => merge({ limit: value }), 'setLimit')(
             10
           );
@@ -405,10 +395,6 @@ describe('Space', function() {
   });
 
   describe('sub-spaces', function() {
-    it('lists are subspaces', function() {
-      assert(isSpace(this.space.characters));
-    });
-
     it('objects are subspaces', function() {
       assert(isSpace(this.space.userInfo));
     });
@@ -439,8 +425,12 @@ describe('Space', function() {
     });
   });
 
-  describe('array spaces', function() {
-    it('has items that are spaces', function() {
+  describe('arrays', function() {
+    it('are arrays', function() {
+      assert(Array.isArray(this.space.characters));
+    });
+
+    it('can have items that are spaces', function() {
       assert(isSpace(this.space.characters[0]));
     });
 
@@ -448,127 +438,29 @@ describe('Space', function() {
       this.space.characters[0]('evil')(true);
       assert.strictEqual(this.causedBy, 'characters[0]#set:evil');
       assert.strictEqual(this.newSpace.characters[0].evil, true);
-      assert(isSpaceArray(this.newSpace.characters));
+      assert.notStrictEqual(this.space.characters, this.newSpace.characters);
     });
 
-    it('has #size', function() {
-      assert.strictEqual(this.space.characters.size, 2);
-    });
-
-    it('has #map', function() {
-      const characterNames = [];
-      this.space.characters.map(character =>
-        characterNames.push(character.name)
-      );
-      assert.deepEqual(characterNames, ['Bilbo Baggins', 'Frodo Baggins']);
-    });
-
-    it('has #slice', function() {
-      const [lastCharacter] = this.space.characters.slice(-1);
-      assert(isSpace(lastCharacter));
-      assert.strictEqual(lastCharacter.name, 'Frodo Baggins');
-    });
-
-    it('has #includes', function() {
-      const arr = new Space([1, 2, 3]);
-      assert(arr.includes(2));
-      assert(!arr.includes(4));
-    });
-
-    it('has #concat', function() {
-      const arr = new Space([1, 2, 3]);
-      assert.deepStrictEqual(arr.concat(4), [1, 2, 3, 4]);
-    });
-
-    it('has #join', function() {
-      const arr = new Space([1, 2, 3]);
-      assert.deepStrictEqual(arr.join(), '1,2,3');
-      assert.deepStrictEqual(arr.join(', '), '1, 2, 3');
-      assert.deepStrictEqual(arr.join('-'), '1-2-3');
-    });
-
-    it('has #sort', function() {
-      const sortedByMostBooks = this.space.characters.sort(
-        (a, b) => b.books.size - a.books.size
-      );
-      assert.deepEqual(sortedByMostBooks.map(c => c.name), [
-        'Frodo Baggins',
-        'Bilbo Baggins',
-      ]);
-    });
-
-    it('has filter', function() {
-      const bilboOnly = this.space.characters.filter(
-        character => character.name === 'Bilbo Baggins'
-      );
-      assert.deepEqual(bilboOnly.map(c => c.name), ['Bilbo Baggins']);
-    });
-
-    describe('updating', function() {
-      it('does not merge', function() {
-        assert.throws(() => {
-          this.space.characters(({ merge }) => {
-            merge({ something: 'fails' });
-          })();
-        }, /You cannot merge onto an array, try replace instead\?/);
-
-        assert.throws(() => {
-          this.space.characters(({ merge }) => merge({ something: 'fails' }))();
-        }, /You cannot merge onto an array, try replace instead\?/);
+    it('items can be added', function() {
+      const newCharacter = {
+        name: 'Sauron',
+        evil: true,
+      };
+      this.space({
+        characters: this.space.characters.concat(newCharacter),
       });
+      assert.strictEqual(this.newSpace.characters.length, 3);
+      assert(isSpace(this.newSpace.characters[2]));
+      assert.strictEqual(this.newSpace.characters[2].name, 'Sauron');
+      assert.strictEqual(this.newSpace.characters[2].toJSON(), newCharacter);
+    });
 
-      it('has replace', function() {
-        this.space.characters(({ replace }) => {
-          replace([{ name: 'Sauron', evil: true }]);
-        })();
-
-        assert.deepEqual(this.newSpace.characters.toJSON(), [
-          { name: 'Sauron', evil: true },
-        ]);
+    it('items can be removed', function() {
+      this.space({
+        characters: this.space.characters.slice(0, 1),
       });
-
-      it('passes in push', function() {
-        const arwen = { name: 'Arwen', species: 'Elf', evil: false };
-        const boromir = { name: 'Boromir', species: 'Human', evil: false };
-        this.space.characters(({ push }) => {
-          push(arwen);
-          push(boromir);
-        })();
-
-        assert.strictEqual(this.newSpace.characters.size, 4);
-        assert.deepEqual(this.newSpace.characters[2].toJSON(), arwen);
-        assert.deepEqual(this.newSpace.characters[3].toJSON(), boromir);
-      });
-
-      it('passes in unshift', function() {
-        const arwen = { name: 'Arwen', species: 'Elf', evil: false };
-        const boromir = { name: 'Boromir', species: 'Human', evil: false };
-        this.space.characters(({ unshift }) => {
-          unshift(arwen);
-          unshift(boromir);
-        })();
-
-        assert.strictEqual(this.newSpace.characters.size, 4);
-        assert.deepEqual(this.newSpace.characters[0].toJSON(), boromir);
-        assert.deepEqual(this.newSpace.characters[1].toJSON(), arwen);
-      });
-
-      it('passes in remove', function() {
-        this.space.characters(({ push }) =>
-          push({ name: 'Sauron', evil: true })
-        )();
-        assert.strictEqual(
-          this.newSpace.characters.filter(item => item.evil).length,
-          1
-        );
-        this.newSpace.characters(({ remove }) => {
-          remove(character => character.evil);
-        })();
-        assert.strictEqual(
-          this.newSpace.characters.filter(item => item.evil).length,
-          0
-        );
-      });
+      assert.strictEqual(this.newSpace.characters.length, 1);
+      assert(!this.newSpace.characters[1]);
     });
   });
 });
