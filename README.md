@@ -18,7 +18,7 @@ Like Redux, it has unidirectional data flow, uses an immutable state, allows for
 
 * **Immutable** – Centralized state with easy to track changes.
 * **Modular** – View components can manage their own part of the state, update logic doesn't need to be centralized.
-* **Conveniet** – Ridiculously easy to update the state in the simplest cases (e.g. the user editing a text field).
+* **Convenient** – Ridiculously easy to update the state in the simplest cases (e.g. the user editing a text field).
 * **Framework Agnostic** – Designed with React in mind, but works with any stateless view library. Has no external dependencies. Requires only ES5, which can be [polyfilled](https://github.com/es-shims/es5-shim)/[transpiled](https://babeljs.io).
 * **Small** – ~7.9K uncompressed, ~2.2K gzipped. No dependencies.
 
