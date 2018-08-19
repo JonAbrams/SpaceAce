@@ -145,6 +145,7 @@ describe('Space', function() {
       assert(this.newSpace.userInfo);
     });
   });
+
   describe('action updating', function() {
     describe('quick actions', function() {
       it('updates single keys with a value', function() {
@@ -427,6 +428,19 @@ describe('Space', function() {
       assert.strictEqual(this.newSpace.userInfo.name, 'Zivi');
       assert.strictEqual(this.newSpace.limit, 6);
       assert.strictEqual(this.newSpace.userInfo.email, 'zivi@example.com');
+    });
+
+    it('can copy spaces', function() {
+      this.space({
+        otherUserInfo: this.space.userInfo,
+      });
+      assert.notStrictEqual(this.newSpace.otherUserInfo, this.space.userInfo);
+
+      this.newSpace.otherUserInfo({ name: 'Noj' });
+      assert.strictEqual(this.newSpace.userInfo, this.space.userInfo);
+      assert.strictEqual(this.newSpace.userInfo.name, 'Jon');
+      assert.strictEqual(this.newSpace.otherUserInfo.name, 'Noj');
+      assert(isSpace(this.newSpace.otherUserInfo));
     });
   });
 
