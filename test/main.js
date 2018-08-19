@@ -65,6 +65,11 @@ describe('Space', function() {
     ]);
   });
 
+  it('supports undefined name', function() {
+    assert.strictEqual(this.space.name, undefined);
+    assert.strictEqual(this.space.userInfo.name, 'Jon');
+  });
+
   it('provides expected state', function() {
     assert.deepEqual(this.space.toJSON(), this.initialState);
   });
