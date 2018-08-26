@@ -51,7 +51,7 @@ yarn add spaceace
 ### What is a Space?
 
 ```js
-const space = new Space({ name: 'Bilbo', todos: [] });
+const space = createSpace({ name: 'Bilbo', todos: [] });
 console.log(space.name); // Bilbo
 ```
 
@@ -121,11 +121,11 @@ SpaceAce can be used with any front-end view library (such as Vue and Angular), 
 ```jsx
 import react from 'react';
 import ReactDOM from 'react-dom';
-import Space, { subscribe } from 'spaceace';
+import { createSpace, subscribe } from 'spaceace';
 import Container from './Container';
 
 // Create the initial root "space" along with its initial state
-const rootSpace = new Space({ name: 'Jon', todos: [] });
+const rootSpace = createSpace({ name: 'Jon', todos: [] });
 
 // Subscribe to any changes that occur within the space
 // so the app can be re-rendered
@@ -226,7 +226,7 @@ There are three ways to update spaces. Each method involves calling the space as
 Immediately "changes" the space by shallowly merging the given object onto the space. A new space is returned with the changes applied and subscribers are immediately invoked.
 
 ```js
-const space = new Space({ name: 'Frodo', race: 'Hobbit' });
+const space = createSpace({ name: 'Frodo', race: 'Hobbit' });
 const newSpace = space({ name: 'Bilbo' }); // { name: 'Bilbo', race: 'Hobbit' }
 ```
 
@@ -337,9 +337,9 @@ The subscriber function is called with the following named params:
 * **causedBy**: A string container which part of the space triggered the change, and the name of the action responsible.
 
 ```js
-import Space, { subscribe } from 'spaceace';
+import { createSpace, subscribe } from 'spaceace';
 
-const space = new Space({});
+const space = createSpace({});
 
 subscribe(space, ({ newSpace, causedBy }) => {
   console.log(newSpace.toJSON(), 'Space updated by ', causedBy);
@@ -352,9 +352,9 @@ subscribe(space, ({ newSpace, causedBy }) => {
 Returns: `true` if the given value is a space, `false` otherwise.
 
 ```js
-import Space, { isSpace } from 'spaceace';
+import { createSpace, isSpace } from 'spaceace';
 
-isSpace(new Space({})); // returns true
+isSpace(createSpace({})); // returns true
 isSpace({}); // returns false
 ```
 
@@ -367,9 +367,9 @@ Returns: The root space associated with the given space.
 **Note**: Returns the latest root space of the passed in space. This means you can safely do `rootOf(space)` anywhere in a custom action, and always get the latest version.
 
 ```js
-import Space, { rootOf } from 'spaceace';
+import { createSpace, rootOf } from 'spaceace';
 
-const space = new Space({ user: { name: 'Frodo' } });
+const space = createSpace({ user: { name: 'Frodo' } });
 
 rootOf(space.user) === space; // true
 
@@ -386,7 +386,7 @@ Returns: The contents of a space as an object literal.
 This is called automatically by `JSON.stringify`, that’s a built-in feature of JS.
 
 ```js
-const space = new Space({ user: 'Frodo', todos: [] });
+const space = createSpace({ user: 'Frodo', todos: [] });
 space.toJSON(); // { user: 'Frodo', todos: [] }
 JSON.stringify(space); // '{ "user": "Frodo", "todos": [] }'
 ```

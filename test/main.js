@@ -2,8 +2,7 @@
 'use strict';
 
 const assert = require('assert');
-const Space = require('../lib/Space');
-const { subscribe, isSpace, rootOf } = Space;
+const { createSpace, subscribe, isSpace, rootOf } = require('../lib/Space');
 
 describe('Space', function() {
   beforeEach(function() {
@@ -37,7 +36,7 @@ describe('Space', function() {
         },
       ],
     };
-    this.space = new Space(this.initialState);
+    this.space = createSpace(this.initialState);
 
     this.numCalls = 0;
     this.newSpace = null;
