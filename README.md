@@ -51,6 +51,7 @@ yarn add spaceace
 ### What is a Space?
 
 ```js
+import { createSpace } from 'spaceace';
 const space = createSpace({ name: 'Bilbo', todos: [] });
 console.log(space.name); // Bilbo
 ```
