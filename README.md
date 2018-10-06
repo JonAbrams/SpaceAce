@@ -17,10 +17,11 @@ Like Redux, it has unidirectional data flow, uses an immutable state, allows for
 ## Benefits
 
 * **Immutable** – Centralized state with easy to track changes.
-* **Modular** – View components can manage their own part of the state, update logic doesn't need to be centralized.
-* **Convenient** – Ridiculously easy to update the state in the simplest cases (e.g. the user editing a text field).
+* **Modular** – View components can manage their own part of the state, update logic doesn't need to be centralized. Also known as [loose coupling](https://en.wikipedia.org/wiki/Loose_coupling).
+* **Convenient** – Ridiculously easy to update the state in the most common cases, such as a user editing a text field.
 * **Framework Agnostic** – Designed with React in mind, but works with any stateless view library. Has no external dependencies. Requires only ES5, which can be [polyfilled](https://github.com/es-shims/es5-shim)/[transpiled](https://babeljs.io).
 * **Small** – ~7.9K uncompressed, ~2.2K gzipped. No dependencies.
+* Works with Redux DevTools
 
 ## Install
 
@@ -46,6 +47,7 @@ yarn add spaceace
   * [isSpace](#isspace)
   * [rootOf](#rootof)
 * [toJSON](#tojson)
+* [Redux DevTools](#redux-devtools)
 * [FAQ](#faq)
 
 ### What is a Space?
@@ -261,6 +263,7 @@ Every time you change a space within a custom action, subscribers will be notifi
 [Named params](http://exploringjs.com/es6/ch_parameter-handling.html#sec_named-parameters) passed to custom actions.
 
 * **space** – space – The space that the action belongs to. Very useful for applying new values based on existing values.
+* **rootSpace** – space – The root space that `space` belongs to. Should be used sparingly, as reading or writing to the rootSpace from a child space makes your code more tightly coupled (aka less modular).
 * **getSpace** — function() -> space – Returns the latest version of the space that this action was called on. Use inside of promises or after any async call to make sure you have this space’s latest version!
 * **merge** – function(object) -> space – Copies each property from the passed in object onto the space. This is a non-recursive (aka shallow) merge. Returns the new space.
 * **replace** – function(object) -> space – Replaces the contents of the current space with the object or array you pass to it. Returns the new space.
@@ -392,17 +395,55 @@ space.toJSON(); // { user: 'Frodo', todos: [] }
 JSON.stringify(space); // '{ "user": "Frodo", "todos": [] }'
 ```
 
+## Redux DevTools
+
+Even though the Redux DevTools broswer extension was originally made for Redux, it works with any immutable store, including SpaceAce!
+
+It's as easy as:
+
+1. Install [Redux DevTools](http://extension.remotedev.io/) in your browser.
+2. Hook up you root space to the extension, if it's detected:
+
+```js
+const rootSpace = createSpace({ [pageName]: {}, ...initialState, user });
+
+let sendToDevtools;
+if (typeof window !== 'undefined' && window.__REDUX_DEVTOOLS_EXTENSION__) {
+  const devtools = window.__REDUX_DEVTOOLS_EXTENSION__.connect({
+    name: 'rootSpace',
+  });
+  sendToDevtools = devtools.send;
+  devtools.init(rootSpace);
+  let devtoolsUpdater = ({ replace }, newState) => replace(newState);
+  devtoolsUpdater = rootSpace(devtoolsUpdater);
+  devtools.subscribe(message => {
+    if (
+      message.type === 'DISPATCH' &&
+      ['JUMP_TO_ACTION', 'JUMP_TO_STATE'].includes(message.payload.type)
+    ) {
+      devtoolsUpdater(JSON.parse(message.state));
+    }
+  });
+}
+
+subscribe(rootSpace, ({ newSpace, oldSpace, causedBy }) => {
+  if (sendToDevtools && causedBy !== '#devtoolsUpdater') {
+    sendToDevtools(causedBy, newSpace);
+  }
+});
+```
+
 ## FAQ
 
 **How do I add middleware like in Redux?**
 
-Hopefully that feature will come soon, please add an issue if you’re interested!
+I haven't encountered a need for it yet, please add an issue if you’re interested!
 
 **Are spaces really immutable?**
 
 Yes? Ok… you got me.
 
-Each space is indeed frozen, all of its child spaces, arrays, and values are also frozen. If a space has changed, you can tell by doing an equality check between both versions, if they're equal to each other, then all their properties are guaranteed to be the identical. It's safe to pass a space into a Pure Component, for example.
+Each space is indeed frozen, all of its child spaces, arrays, and values are also frozen. If a space has changed, you can tell by doing an equality check between both versions, if they're equal to each other, then all their properties are guaranteed to be the identical. It's safe to pass a space into a [Pure Component](https://reactjs.org/docs/react-api.html#reactpurecomponent), for example.
 
 But! There are a few hidden, non-enumerable, properties on every space (and array) that are mutable. They're not meant to be changed by you, they're used by SpaceAce to track subscribers and newer versions of the same space.
 
@@ -413,6 +454,38 @@ Yes! Checkout out https://www.trustedhealth.com/
 **Is there an example app?**
 
 Yup-a-roni! I modified [Redux's sample todo list](https://codesandbox.io/s/github/reduxjs/redux/tree/master/examples/todos) app to use [SpaceAce instead](https://codesandbox.io/s/zl1n53mwwl)
+
+**Won’t action names be garbled in product? Can I use constants for action names?**
+
+Yes, to both. Since most productions code is minified, and the names of custom actions are inferred from their function's name, the action name might end up looking like `a` or `b1` in production.
+
+I've found this to not be a problem since I've never needed to troubleshoot state issues in production, but if you need this it can fixed by using string constants for action names.
+
+Feel free to experiment as to where you store these actions and/or constants.
+
+```jsx
+// actions.js
+
+export const ADD_TODO = 'ADD_TODO';
+
+export const actions = {
+  [ADD_TODO]({ merge, space }) {
+    merge({
+      todos: space.todos.concat({
+        content: 'A new TODO',
+        done: false,
+        id: uuid(),
+      }),
+    });
+  },
+};
+
+// someComponent.js
+
+import { actions, ADD_TODO } from '../actions';
+//…
+<button onClick={space(actions[ADD_TODO])}>…</button>;
+```
 
 ## License
 

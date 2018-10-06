@@ -312,6 +312,41 @@ describe('Space', function() {
           assert.strictEqual(this.newSpace.characters.length, 2);
         });
 
+        it('passes in a replace function', function() {
+          this.space(({ replace }) => {
+            replace({ allGone: true });
+          })();
+
+          assert.deepStrictEqual(this.newSpace.toJSON(), { allGone: true });
+        });
+
+        it('passes in a rootSpace', function() {
+          this.space.userInfo(({ merge, rootSpace, space }) => {
+            assert.strictEqual(rootSpace, this.space);
+            assert.notStrictEqual(space, this.space);
+            merge({ touched: true });
+          })();
+
+          assert(this.newSpace.userInfo.touched);
+        });
+
+        it('passes in getSpace', async function() {
+          await this.space(async ({ space, merge, getSpace }) => {
+            // limit is 5
+            merge({ limit: space.limit + 1 }); // change to 6
+
+            return Promise.resolve().then(() => {
+              merge({ limit: getSpace().limit + 1 }); // 7
+              assert.strictEqual(space.limit, 5); // original is unchanged
+              assert.strictEqual(getSpace().limit, 7); // latest is 7
+              assert.strictEqual(this.newSpace.limit, 7); // global space is latest
+            });
+          })();
+
+          // Can safely see the final updated state after action's promise resolved
+          assert.strictEqual(this.newSpace.limit, 7);
+        });
+
         it('shallow merges only', function() {
           this.space(({ merge }) => {
             merge({ userInfo: { name: 'zivi' } });
@@ -331,23 +366,6 @@ describe('Space', function() {
         assert.strictEqual(this.newSpace.limit, 10);
         assert.strictEqual(this.newSpace.searchTerm, 'legolas');
         assert.strictEqual(this.numCalls, 2);
-      });
-
-      it('provides getSpace', async function() {
-        await this.space(async ({ space, merge, getSpace }) => {
-          // limit is 5
-          merge({ limit: space.limit + 1 }); // change to 6
-
-          return Promise.resolve().then(() => {
-            merge({ limit: getSpace().limit + 1 }); // 7
-            assert.strictEqual(space.limit, 5); // original is unchanged
-            assert.strictEqual(getSpace().limit, 7); // latest is 7
-            assert.strictEqual(this.newSpace.limit, 7); // global space is latest
-          });
-        })();
-
-        // Can safely see the final updated state after action's promise resolved
-        assert.strictEqual(this.newSpace.limit, 7);
       });
 
       it('updates latest spaces', async function() {

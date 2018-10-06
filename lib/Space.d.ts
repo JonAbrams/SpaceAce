@@ -8,6 +8,7 @@ interface ActionParams {
   replace(newState: object): Space;
   getSpace(): Space;
   space: Space;
+  rootSpace: Space;
 }
 
 export interface CustomAction {
