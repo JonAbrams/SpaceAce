@@ -2,7 +2,13 @@
 'use strict';
 
 const assert = require('assert');
-const { createSpace, subscribe, isSpace, rootOf } = require('../lib/Space');
+const {
+  createSpace,
+  subscribe,
+  isSpace,
+  rootOf,
+  newestSpace,
+} = require('../lib/Space');
 
 describe('Space', function() {
   beforeEach(function() {
@@ -109,10 +115,32 @@ describe('Space', function() {
         assert.strictEqual(rootOf(this.space.characters[0]), this.space);
       });
 
+      it('returns the deepest root space', function() {
+        assert.strictEqual(rootOf(this.space.userInfo.location), this.space);
+      });
+
+      it('returns the newest copy of the root space', function() {
+        this.space.userInfo.location({ city: 'San Diego' });
+        assert.strictEqual(rootOf(this.space.userInfo.location), this.newSpace);
+      });
+
       it('throws when given non-space', function() {
         assert.throws(() => {
           rootOf({});
         });
+      });
+    });
+
+    describe('.newestSpace', function() {
+      it('returns the same object if no updates were made', function() {
+        const capture = this.space.userInfo;
+        assert.strictEqual(newestSpace(capture), capture);
+      });
+
+      it('returns newest copy of current space', function() {
+        const capture = this.space.userInfo.location;
+        const newerSpace = capture({ city: 'San Diego' });
+        assert.strictEqual(newestSpace(capture), newerSpace);
       });
     });
 

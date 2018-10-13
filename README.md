@@ -366,7 +366,7 @@ isSpace({}); // returns false
 
 Parameter: A space
 
-Returns: The root space associated with the given space.
+Returns: The the deepest root space associated with the given space.
 
 **Note**: Returns the latest root space of the passed in space. This means you can safely do `rootOf(space)` anywhere in a custom action, and always get the latest version.
 
@@ -381,6 +381,24 @@ space.user(({ merge, space }, name) => {
   merge({ name });
   rootOf(space).user.name === 'Sam'; // true
 })('Sam');
+```
+
+### newestSpace
+
+Parameter: A space
+
+Returns: The newest copy of the space, at the same level.
+
+**Note**: This is a sister function of `rootOf(space)`, however where `rootOf(space)` returns the deepest root, this one returns the newest copy of the current level.
+
+```js
+import { createSpace, newestSpace } from 'spaceace';
+
+const space = createSpace({ user: { name: 'Frodo' } });
+const latestSnapshot = space.user({ name: 'Sam' });
+
+latestSnapshot.name === 'Sam'; // true
+newestSpace(space.user).name === 'Sam'; // true
 ```
 
 ## toJSON
