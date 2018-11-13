@@ -12,7 +12,7 @@ Like Redux, it has unidirectional data flow, uses an immutable state, allows for
 
 * [Introductory blog post](https://medium.com/@jonathanabrams/introducing-spaceace-a-new-kind-of-front-end-state-library-5215b18adc11)
 * [SpaceAce Todo App on CodeSandbox](https://codesandbox.io/s/zl1n53mwwl)
-* [Original Redux Todo App on CodeSandbox](https://codesandbox.io/s/github/reduxjs/redux/tree/master/examples/todos) (for comparison)
+* [Original Redux Todo App on CodeSandbox](https://codesandbox.io/s/ql8k7wr079) (for comparison)
 
 ## Benefits
 
