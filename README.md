@@ -276,9 +276,9 @@ Custom actions can optionally be async functions. If they're async (i.e. return 
 
 ### Arrays
 
-Arrays in a space are proper JS arrays, but are treat by SpaceAce as spaces. You cannot update them like you can normal spaces based on objects. Unlike vanilla arrays, you can call `toJSON()` on arrays taken from spaces to get a version of the array containing only plain object literals. If you call `isSpace(…)` on an array taken from a space, it will return true.
+Arrays in a space are proper JS arrays, but are frozen. You cannot update them like you can normal spaces. These arrays do have some similarities to spaces though. You can call `toJSON()` on arrays taken from spaces to get a version of the array containing only plain object literals. If you call `isSpace(…)` on an array taken from a space, it will return true.
 
-To update an array in a space, modify its parent:
+To update an array in a space, modify its parent by assigning a fresh new array:
 
 ```jsx
 const changeTodos = ({ merge, space }, itemToRemove) => {
