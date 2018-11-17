@@ -115,7 +115,7 @@ describe('Space', function() {
         assert.strictEqual(rootOf(this.space.characters[0]), this.space);
       });
 
-      it('returns the deepest root space', function() {
+      it('goes all the way up the chain of parent spaces', function() {
         assert.strictEqual(rootOf(this.space.userInfo.location), this.space);
       });
 
