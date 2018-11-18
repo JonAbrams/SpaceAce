@@ -368,7 +368,7 @@ Parameter: A space
 
 Returns: The root space associated with the given space.
 
-**Note**: Returns the latest root space of the passed in space. This means you can safely do `rootOf(space)` anywhere in a custom action, and always get the latest version.
+**Note**: This function goes all the way up in the chain of parent spaces, returning the latest root space of the parameter. This means you can safely do `rootOf(space)` anywhere in a custom action, and always get the latest version.
 
 ```js
 import { createSpace, rootOf } from 'spaceace';
@@ -381,6 +381,22 @@ space.user(({ merge, space }, name) => {
   merge({ name });
   rootOf(space).user.name === 'Sam'; // true
 })('Sam');
+```
+
+### newestSpace
+
+Parameter: A space
+
+Returns: The newest copy of the space, at the same level.
+
+```js
+import { createSpace, newestSpace } from 'spaceace';
+
+const space = createSpace({ user: { name: 'Frodo' } });
+const latestSnapshot = space.user({ name: 'Sam' });
+
+latestSnapshot.name === 'Sam'; // true
+newestSpace(space.user).name === 'Sam'; // true
 ```
 
 ## toJSON
