@@ -48,5 +48,5 @@ interface Subscriber {
 export function rootOf(space: Space): Space;
 export function newestSpace(space: Space): Space;
 export function isSpace(space: Space | any): boolean;
-export function subscribe(subscriber: Subscriber): boolean;
+export function subscribe(space: Space, subscriber: Subscriber): boolean;
 export function createSpace(initialState: object): Space;
