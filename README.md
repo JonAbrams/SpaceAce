@@ -78,7 +78,7 @@ subscribe(space, ({ newSpace }) => {
 renderApp(space); // initial render
 ```
 
-Since most changes to your application's state is caused by user interactions, it's very easy to bind _actions_ to events:
+Since most changes to your application's state is caused by user interactions, it’s very easy to bind _actions_ to events:
 
 ```jsx
 const clearName = ({ merge }, event) => {
@@ -183,7 +183,7 @@ const addTodo = ({ merge, space }, event) => {
 
 ```jsx
 // You can rename the space to something more meaningful
-// It's recommended that the prop still be called `space`, so when you’re
+// it’s recommended that the prop still be called `space`, so when you’re
 // working on the parent component, you’ll know it expects a space to be passed in
 export default const Todo = ({ space: todo }) => {
   const doneClassName = todo.done ? 'done' : '';
@@ -229,8 +229,8 @@ There are three ways to update spaces. Each method involves calling the space as
 Immediately "changes" the space by shallowly merging the given object onto the space. A new space is returned with the changes applied and subscribers are immediately invoked.
 
 ```js
-const space = createSpace({ name: 'Frodo', race: 'Hobbit' });
-const newSpace = space({ name: 'Bilbo' }); // { name: 'Bilbo', race: 'Hobbit' }
+const space = createSpace({ name: 'Frodo', race: 'Hobbit’ });
+const newSpace = space({ name: 'Bilbo' }); // { name: 'Bilbo', race: 'Hobbit’ }
 ```
 
 ### Quick Actions (string)
@@ -254,7 +254,7 @@ export default const Todo = ({ space: todo }) => {
 
 ### Custom Actions (function)
 
-A custom action is a function that is passed to a space. It returns a wrapped function. When the wrapped function is called, the action is called with a few named parameters (as the first actual parameter). The rest of the parameters are whatever is passed to the wrapped function when it's eventually called.
+A custom action is a function that is passed to a space. It returns a wrapped function. When the wrapped function is called, the action is called with a few named parameters (as the first actual parameter). The rest of the parameters are whatever is passed to the wrapped function when it’s eventually called.
 
 Every time you change a space within a custom action, subscribers will be notified. Every change you apply will apply on the latest version of the space.
 
@@ -272,7 +272,7 @@ Every time you change a space within a custom action, subscribers will be notifi
 
 Custom actions can optionally be async functions. If they're async (i.e. return a promise), the wrapped action will also return a promise, which is resolved when the custom action is resolved. Return values like this are typically only needed when writing tests.
 
-**Note**: After an `await`, the `space` that's passed in at the top of the action may be out of date, it's _highly_ recommended to always use `getSpace()` to get the latest version of the space after an `await` (or inside a callback).
+**Note**: After an `await`, the `space` that's passed in at the top of the action may be out of date, it’s _highly_ recommended to always use `getSpace()` to get the latest version of the space after an `await` (or inside a callback).
 
 ### Arrays
 
@@ -329,6 +329,8 @@ const changeTodos = ({ merge, space }, itemToRemove) => {
 
 ### subscribe
 
+Act on, or cancel, state changes.
+
 Parameters:
 
 1. A space that you want to subscribe to.
@@ -338,7 +340,8 @@ The subscriber function is called with the following named params:
 
 * **newSpace**: The new space that was just created.
 * **oldSpace**: The old version of the space that existing before it was changed.
-* **causedBy**: A string container which part of the space triggered the change, and the name of the action responsible.
+* **causedBy**: A string specifying which part of the space triggered the change, and the name of the action responsible.
+* **cancel**: A function, when called, prevents future subsribers from being called.
 
 ```js
 import { createSpace, subscribe } from 'spaceace';
@@ -347,6 +350,37 @@ const space = createSpace({});
 
 subscribe(space, ({ newSpace, causedBy }) => {
   console.log(newSpace.toJSON(), 'Space updated by ', causedBy);
+  renderApp(newSpace);
+});
+```
+
+* Subscribers can optionally **act as middleware**. If a subscriber returns an object, it will be turned into a space, and future subscribers will receive it as their `newSpace`.
+* Subscribers are called in the order that they're subscribed, synchronously.
+* Parent spaces receive the latest returned version after all child space subscribers are called.
+* All future subscribers can be skipped by calling the passed in named param `cancel`.
+
+If you want your "middleware" to not apply changes immediately, but instead do something async and then apply the changes, consider using [`cancel()`](#subscribe), and then applying changes using an [immediate update](#immediate-update-object) when you’re ready.
+
+```js
+subscribe(space.address, ({ oldSpace, newSpace, cancel }) => {
+  const stateCode = newSpace.stateCode.toUpperCase();
+  if (stateCode !== oldSpace.stateCode) {
+    if (!listOfUSStates.includes(stateCode)) {
+      // Cancel the update if the provided code is not allowed
+      cancel();
+      return;
+    }
+
+    // Alter the specified stateCode to uppercase
+    return {
+      ...newSpace,
+      stateCode,
+    };
+  }
+});
+
+subscribe(space, ({ newSpace }) => {
+  // Receives `newSpace.address` with `stateCode` uppercase
   renderApp(newSpace);
 });
 ```
@@ -415,10 +449,10 @@ JSON.stringify(space); // '{ "user": "Frodo", "todos": [] }'
 
 Even though the Redux DevTools broswer extension was originally made for Redux, it works with any immutable store, including SpaceAce!
 
-It's as easy as:
+it’s as easy as:
 
 1. Install [Redux DevTools](http://extension.remotedev.io/) in your browser.
-2. Hook up you root space to the extension, if it's detected:
+2. Hook up you root space to the extension, if it’s detected:
 
 ```js
 const rootSpace = createSpace({ [pageName]: {}, ...initialState, user });
@@ -459,7 +493,7 @@ I haven't encountered a need for it yet, please add an issue if you’re interes
 
 Yes? Ok… you got me.
 
-Each space is indeed frozen, all of its child spaces, arrays, and values are also frozen. If a space has changed, you can tell by doing an equality check between both versions, if they're equal to each other, then all their properties are guaranteed to be the identical. It's safe to pass a space into a [Pure Component](https://reactjs.org/docs/react-api.html#reactpurecomponent), for example.
+Each space is indeed frozen, all of its child spaces, arrays, and values are also frozen. If a space has changed, you can tell by doing an equality check between both versions, if they're equal to each other, then all their properties are guaranteed to be the identical. it’s safe to pass a space into a [Pure Component](https://reactjs.org/docs/react-api.html#reactpurecomponent), for example.
 
 But! There are a few hidden, non-enumerable, properties on every space (and array) that are mutable. They're not meant to be changed by you, they're used by SpaceAce to track subscribers and newer versions of the same space.
 

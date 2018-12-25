@@ -513,4 +513,53 @@ describe('Space', function() {
       assert(!this.newSpace.characters[1]);
     });
   });
+
+  describe('subscribe/middleware', function() {
+    it('is called in order', function() {
+      const results = [];
+      subscribe(this.space, () => results.push('first'));
+      subscribe(this.space, () => results.push('second'));
+      subscribe(this.space, () => results.push('third'));
+      assert.deepStrictEqual(results, []);
+      this.space({ someVal: true });
+      assert.deepStrictEqual(results, ['first', 'second', 'third']);
+    });
+
+    it('can cancel future subscribers', function() {
+      const results = [];
+      subscribe(this.space.userInfo, ({ cancel }) => {
+        results.push('first');
+        cancel();
+      });
+      subscribe(this.space.userInfo, () => results.push('second'));
+      this.space.userInfo({ someVal: true });
+      assert.deepStrictEqual(results, ['first']);
+
+      // parent subscribers should never be called
+      assert.strictEqual(this.numCalls, 0);
+    });
+
+    it('can provide replacement states', function() {
+      const lSpace = this.space.userInfo.location;
+      subscribe(lSpace, ({ newSpace }) => ({
+        ...newSpace,
+        state: newSpace.state.toUpperCase(),
+      }));
+      subscribe(lSpace, ({ newSpace }) =>
+        assert.deepStrictEqual(
+          { ...newSpace },
+          {
+            city: 'San Mateo',
+            state: 'PA',
+            country: 'USA',
+          }
+        )
+      );
+      lSpace({ state: 'pa' });
+
+      // parent gets latest version
+      assert.deepEqual(this.newSpace.userInfo.location.state, 'PA');
+      assert.strictEqual(this.numCalls, 1);
+    });
+  });
 });
