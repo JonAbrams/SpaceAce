@@ -27,7 +27,7 @@ interface EventHandler {
 }
 
 interface Space {
-  (mergeObj: object): Space;
+  (mergeObj: object, actionName?: string): Space;
   (attributeName: string): SimpleEventHandler;
   (customAction: CustomAction): EventHandler;
   toJSON(): object;
