@@ -12,7 +12,7 @@ interface ActionParams {
 }
 
 export interface CustomAction {
-  (actionParams: ActionParams, ...args: any[]): Space;
+  (actionParams: ActionParams, ...args: any[]): Space | void;
 }
 
 interface Event {
