@@ -229,7 +229,7 @@ There are three ways to update spaces. Each method involves calling the space as
 Immediately "changes" the space by shallowly merging the given object onto the space. A new space is returned with the changes applied and subscribers are immediately invoked.
 
 ```js
-const space = createSpace({ name: 'Frodo', race: 'Hobbit’ });
+const space = createSpace({ name: 'Frodo', race: 'Hobbit' });
 const newSpace = space({ name: 'Bilbo' }); // { name: 'Bilbo', race: 'Hobbit’ }
 ```
 
