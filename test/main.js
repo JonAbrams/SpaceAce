@@ -512,6 +512,18 @@ describe('Space', function() {
       assert.strictEqual(this.newSpace.characters.length, 1);
       assert(!this.newSpace.characters[1]);
     });
+
+    it('item can be safely updated after removed', function() {
+      const bilbo = this.space.characters[0];
+      this.space({
+        characters: this.space.characters.slice(1),
+      });
+      const newBilbo = bilbo({ evil: true });
+      assert.notStrictEqual(this.newSpace.characters[0].name, bilbo.name);
+      assert.strictEqual(rootOf(bilbo), newBilbo);
+
+      this.newSpace.characters[0]({ evil: true });
+    });
   });
 
   describe('subscribe/middleware', function() {
