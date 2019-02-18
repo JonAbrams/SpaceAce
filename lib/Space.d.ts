@@ -29,7 +29,7 @@ interface EventHandler {
 interface Space {
   (mergeObj: object, actionName?: string): Space;
   (attributeName: string): SimpleEventHandler;
-  (customAction: CustomAction): EventHandler;
+  (customAction: CustomAction, ...args: any[]): EventHandler;
   toJSON(): object;
   toString(): string;
   [attribute: string]: Space | Space[] | any;

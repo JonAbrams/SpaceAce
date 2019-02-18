@@ -304,6 +304,15 @@ describe('Space', function() {
           assert.strictEqual(this.newSpace.limit, 30);
         });
 
+        it('binds values', function() {
+          const action = ({ merge }, boundValue, value) =>
+            merge({ limit: boundValue + value });
+
+          this.space(action, 30)(3);
+
+          assert.strictEqual(this.newSpace.limit, 33);
+        });
+
         it('passes in an event if present', function() {
           this.space(({ merge }, event) =>
             merge({ searchTerm: event.target.value })
