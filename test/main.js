@@ -442,13 +442,6 @@ describe('Space', function() {
           this.space(decLimit)();
           assert.strictEqual(this.causedBy, '#decLimit');
         });
-
-        it('supports overriding action names', function() {
-          this.space(({ value, merge }) => merge({ limit: value }), 'setLimit')(
-            10
-          );
-          assert.strictEqual(this.causedBy, '#setLimit');
-        });
       });
     });
   });
