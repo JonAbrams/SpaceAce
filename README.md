@@ -499,7 +499,7 @@ But! There are a few hidden, non-enumerable, properties on every space (and arra
 
 **Has this been used in production?**
 
-Yes! Checkout out https://www.trustedhealth.com/
+Previously Yes! It **was** being used at https://www.trustedhealth.com/
 
 **Is there an example app?**
 
